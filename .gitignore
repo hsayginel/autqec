@@ -1,0 +1,8 @@
+*.egg-info
+*__pycache__
+*.ipynb_checkpoints
+.DS_store
+future
+codes.py
+2GBA*
+BB_codes
