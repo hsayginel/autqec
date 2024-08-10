@@ -97,23 +97,23 @@ def symp_mat_prods(ops,n):
         gate_type, qubits = op
         # Add the corresponding gate to the circuit
         if gate_type == 'CNOT':
-            mat = CNOT_gate(qubits[0], qubits[1], n) @ mat
+            mat = mat @ CNOT_gate(qubits[0], qubits[1], n) 
         elif gate_type == 'CZ':
-            mat = CZ_gate(qubits[0], qubits[1], n) @ mat
+            mat = mat @ CZ_gate(qubits[0], qubits[1], n) 
         elif gate_type == 'SWAP':
-            mat = SWAP_gate(qubits[0], qubits[1], n) @ mat
+            mat = mat @ SWAP_gate(qubits[0], qubits[1], n) 
         elif gate_type == 'H':
-            mat = H_gate(qubits, n) @ mat
+            mat = mat @ H_gate(qubits, n) 
         elif gate_type == 'S':
-            mat = S_gate(qubits, n) @ mat
+            mat = mat @ S_gate(qubits, n) 
         elif gate_type == 'Xsqrt':
-            mat = Xsqrt_gate(qubits, n) @ mat
+            mat = mat @ Xsqrt_gate(qubits, n) 
         elif gate_type == 'C(X,X)':
-            mat = CX_XX_gate(qubits[0], qubits[1], n) @ mat
+            mat = mat @ CX_XX_gate(qubits[0], qubits[1], n) 
         elif gate_type == 'GammaXYZ':
-            mat = gamma_XYZ_gate(qubits, n) @ mat
+            mat = mat @ gamma_XYZ_gate(qubits, n)
         elif gate_type == 'GammaXZY':
-            mat = gamma_XZY_gate(qubits, n) @ mat
+            mat = mat @ gamma_XZY_gate(qubits, n) 
         else:
             raise TypeError(f"Unsupported gate type: {gate_type}")
     return mat%2
@@ -152,14 +152,13 @@ def clifford_circ_stab_update(op_3bit_p,physical_circ):
         Args: 
             op_3bit_p (tuple): phases + op_3bit 
     """
-    phases, op_3bit = op_3bit_p 
+    phases = op_3bit_p[0].copy()
+    op_3bit = op_3bit_p[1].copy()
     if op_3bit.ndim == 1:
         op_3bit = op_3bit.reshape(1, -1)
     n = op_3bit.shape[1] // 3
-    
     for gate in physical_circ:
         gate_type, qubits = gate
-        # print(op_4bit)
         if type(qubits) == int:
             q = qubits - 1
             a = q # x+z
@@ -217,7 +216,6 @@ def clifford_circ_stab_update(op_3bit_p,physical_circ):
             x2 = op_3bit[:,q2+n]
             z1 = op_3bit[:,q1+2*n]
             z2 = op_3bit[:,q2+2*n]
-            # phases = (phases+ 2*x1*z2*(1-xz1-xz2))%4 # probs no 
             op_3bit[:,q1] =  (op_3bit[:,q1] + op_3bit[:,q2+2*n])%2
             op_3bit[:,q2] = (op_3bit[:,q2] + op_3bit[:,q1+n])%2
             op_3bit[:,q2+n] = (op_3bit[:,q2+n] + op_3bit[:,q1+n])%2
@@ -234,5 +232,4 @@ def clifford_circ_stab_update(op_3bit_p,physical_circ):
             op_3bit[:,q2+n] = (op_3bit[:,q2+n] + op_3bit[:,q1+2*n])%2
         else: 
             raise TypeError(f'Gate type unknown: {gate_type}')
-
     return phases, op_3bit

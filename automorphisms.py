@@ -394,7 +394,7 @@ class logical_circ_of_aut:
         symplectic_mat = symplectic_mat_og.copy()
         logical_circ = symplectic_mat_to_logical_circ(symplectic_mat).run()
 
-        if np.allclose(symp_mat_prods(logical_circ[::-1],self.k),symplectic_mat) == False:
+        if np.allclose(symp_mat_prods(logical_circ,self.k),symplectic_mat) == False:
             raise AssertionError("Logical circuit is wrong.")
         
         return logical_circ, symplectic_mat
@@ -482,11 +482,8 @@ class symplectic_mat_to_logical_circ:
 
         k = symplectic_mat.shape[0] // 2
 
-        # invert symplectic matrix
-        omega = np.eye(2*k,dtype=int)
-        omega[:,:k], omega[:,k:] = omega[:,k:].copy(), omega[:,:k].copy()
         self.k = k
-        self.symplectic_mat = omega@symplectic_mat.T@omega
+        self.symplectic_mat = symplectic_mat.copy()
 
     def find_H_gates(self):
         """ Return H gates. """
@@ -573,7 +570,7 @@ class symplectic_mat_to_logical_circ:
         CNOT_circ, reduced_mat = CNOT_circ_from_GL_mat(XX_part_GL_matrix)
         assert is_identity_matrix(reduced_mat)
 
-        return CNOT_circ
+        return CNOT_circ[::-1]
         
     def run(self):
         """ Full algorithm for finding the quantum circuit of the 
@@ -641,9 +638,9 @@ class symplectic_mat_to_logical_circ:
         CNOT_circ = self.find_CNOT_circuits()
 
         logical_circ = []
-        logical_circs = [H_circ, XZ_circ, ZX_circ, CNOT_circ]
+        logical_circs = [CNOT_circ,ZX_circ,XZ_circ,H_circ]
 
         for circ in logical_circs:
             if circ:
-                logical_circ.extend(circ)
+                logical_circ.extend(circ[::-1])
         return logical_circ

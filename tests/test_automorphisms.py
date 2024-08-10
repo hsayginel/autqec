@@ -6,17 +6,17 @@ def basic_test():
     n = 10
     # SWAPS
     aut1 = [(1,4),(2,5),(3,6),(7,13),(8,14),(9,15)]
-    physical_act = physical_circ_of_aut(np.zeros((10,10)),aut1)
+    physical_act = physical_circ_of_aut(np.eye(10),aut1)
     print(physical_act.circ())
 
     # Single-qubit Cliffords
     aut2 = [(1,2,3),(4,5),(8,9),(11,10,12),(13,15)]
-    physical_act = physical_circ_of_aut(np.zeros((10,10)),aut1)
+    physical_act = physical_circ_of_aut(np.eye(10),aut1)
     print(physical_act.circ())
 
     # Both
     aut3 = aut1+aut2
-    physical_act = physical_circ_of_aut(np.zeros((10,10)),aut1)
+    physical_act = physical_circ_of_aut(np.eye(10),aut1)
     print(physical_act.circ())
 ####################################################
 
@@ -29,31 +29,31 @@ def test_auts_symplectic_mats():
     gamma_XYZ = [(1,3,2)]
 
     # H
-    act = physical_circ_of_aut(np.zeros((2,2)),H)
+    act = physical_circ_of_aut(np.eye(2),H)
     symp_mat = act.symp_transform()
     assert np.allclose(symp_mat,H_gate(1,1))
     assert act.circ()[0][0][0] == 'H'
 
     # Xsqrt
-    act = physical_circ_of_aut(np.zeros((2,2)),Xsqrt)
+    act = physical_circ_of_aut(np.eye(2),Xsqrt)
     symp_mat = act.symp_transform()
     assert np.allclose(symp_mat,Xsqrt_gate(1,1))
     assert act.circ()[0][0][0] == 'Xsqrt'
 
     # S
-    act = physical_circ_of_aut(np.zeros((2,2)),S)
+    act = physical_circ_of_aut(np.eye(2),S)
     symp_mat = act.symp_transform()
     assert np.allclose(symp_mat,S_gate(1,1))
     assert act.circ()[0][0][0] == 'S'
 
     # gamma_XYZ
-    act = physical_circ_of_aut(np.zeros((2,2)),gamma_XYZ)
+    act = physical_circ_of_aut(np.eye(2),gamma_XYZ)
     symp_mat = act.symp_transform()
     assert np.allclose(symp_mat,np.array([[1,1],[1,0]]))
     assert act.circ()[0][0][0] == 'GammaXYZ'
 
     # gamma_XZY
-    act = physical_circ_of_aut(np.zeros((2,2)),gamma_XZY)
+    act = physical_circ_of_aut(np.eye(2),gamma_XZY)
     symp_mat = act.symp_transform()
     assert np.allclose(symp_mat,np.array([[0,1],[1,1]]))
     assert act.circ()[0][0][0] == 'GammaXZY'
