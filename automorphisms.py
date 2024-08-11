@@ -456,7 +456,7 @@ class logical_circ_of_aut:
                     else:
                         pauli_gates.append(('X',q+1))
                         pauli_gates.append(('Z',q+1))
-            return logical_circ + pauli_gates
+            return  pauli_gates + logical_circ 
         else: 
             self.print_pauli_corrections()
             raise AssertionError("Pauli correction failed: multiples of i phases present.")
