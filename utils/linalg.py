@@ -123,7 +123,7 @@ def CNOT_circ_from_GL_mat(matrix, full=True):
 
     row_esch_matrix = the_matrix
 
-    return [reverse_quantum_circuit[::-1], row_esch_matrix]
+    return [reverse_quantum_circuit, row_esch_matrix]
 
 
 
