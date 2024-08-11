@@ -433,11 +433,11 @@ class logical_circ_of_aut:
 
         self.physical_circ_phases = physical_circ_phases 
         self.logical_circ_phases = logical_circ_phases
-        phase_diff = physical_circ_phases - logical_circ_phases
+        phase_diff = np.array(np.abs(physical_circ_phases - logical_circ_phases),dtype=int)
 
         pauli_gates = []
         if np.all(phase_diff % 2 == 0) == True:
-            phase_diff = phase_diff/2
+            phase_diff = np.array(phase_diff/2,dtype=int)
             X_part = phase_diff[:self.k]
             Z_part = phase_diff[self.k:]
             
@@ -456,7 +456,6 @@ class logical_circ_of_aut:
                     else:
                         pauli_gates.append(('X',q+1))
                         pauli_gates.append(('Z',q+1))
-
             return logical_circ + pauli_gates
         else: 
             self.print_pauli_corrections()
@@ -482,8 +481,14 @@ class symplectic_mat_to_logical_circ:
 
         k = symplectic_mat.shape[0] // 2
 
+        # self.k = k
+        # self.symplectic_mat = symplectic_mat.copy()
+
+        # invert symplectic matrix
+        omega = np.eye(2*k,dtype=int)
+        omega[:,:k], omega[:,k:] = omega[:,k:].copy(), omega[:,:k].copy()
         self.k = k
-        self.symplectic_mat = symplectic_mat.copy()
+        self.symplectic_mat = omega@symplectic_mat.T@omega
 
     def find_H_gates(self):
         """ Return H gates. """
@@ -638,9 +643,10 @@ class symplectic_mat_to_logical_circ:
         CNOT_circ = self.find_CNOT_circuits()
 
         logical_circ = []
-        logical_circs = [CNOT_circ,ZX_circ,XZ_circ,H_circ]
+        logical_circs = [H_circ,XZ_circ,ZX_circ,CNOT_circ]
+        # logical_circs = [CNOT_circ,ZX_circ,XZ_circ,H_circ]
 
         for circ in logical_circs:
             if circ:
-                logical_circ.extend(circ[::-1])
+                logical_circ.extend(circ)
         return logical_circ
