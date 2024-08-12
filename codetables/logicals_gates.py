@@ -17,15 +17,21 @@ with open("codetables/error_log/logicals_errors.txt", "w") as file:
                 gates = {}
                 gates['physical'] = []
                 gates['logical'] = []
+                symp_mats = []
                 for aut in auts:
                     phys_act = physical_circ_of_aut(H_symp,aut)        
                     phys_circ = phys_act.circ_w_pauli_correction()
                     gates['physical'].append(phys_circ)
                     logical_act = logical_circ_of_aut(H_symp,aut)   
+                    logical_circ, symplectic_mat = logical_act.circ()
                     logical_circ = logical_act.circ_w_pauli_correction()
                     gates['logical'].append(logical_circ)
-                # with open(f'codetables/logical_gates/gates_n{n}k{k}.pkl', 'wb') as f:
-                #     pickle.dump(gates, f)
+                    symp_mats.append(symplectic_mat)
+
+                with open(f'codetables/logical_gates/gates_n{n}k{k}.pkl', 'wb') as f:
+                    pickle.dump(gates, f)
+                with open(f'codetables/logical_gates/symp_mats_n{n}k{k}.pkl', 'wb') as f:
+                    pickle.dump(symp_mats, f)
 
             except Exception as e:
                 error_message = f"Case [[{n,k}]] failed with error: {e}\n"
