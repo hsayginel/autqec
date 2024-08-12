@@ -3,7 +3,7 @@ import re
 import subprocess
 from utils.symplectic import *
 from itertools import combinations, permutations
-
+import os
 
 def convert_to_magma_mat(mat,mat_name='M'):
     """
@@ -333,3 +333,48 @@ printf "FINISH";
     def check_all_gates_individually(self):
         gates, gates_var_names, gates_as_str = self.all_gates()
         return self.MAGMA_check_gates(gates, gates_var_names, gates_as_str)
+    
+def codetables_check_all_gates(n,k):
+    fileroot = './logical_gates/'
+    # filepath = fileroot + f'gates_n{n}k{k}.pkl'
+    # with open(filepath, 'rb') as file:
+    #     code_auts_data = pickle.load(file)
+    filepath = fileroot + f'symp_mats_n{n}k{k}.pkl'
+    if os.path.exists(filepath):
+        with open(filepath, 'rb') as file:
+            symplectic_mats_list = pickle.load(file)
+        subgroups = clifford_subgroups(k,symplectic_mats_list)
+        order = subgroups.return_order()
+        print(f"n{n}k{k}",order)
+        print(subgroups.check_all_gates_individually())
+        print('')
+    else: 
+        print(f"n{n}k{k} - FILE MISSING.")
+    return order
+
+def codetables_check_clifford_group(n,k):
+    fileroot = './logical_gates/'
+    # filepath = fileroot + f'gates_n{n}k{k}.pkl'
+    # with open(filepath, 'rb') as file:
+    #     code_auts_data = pickle.load(file)
+    filepath = fileroot + f'symp_mats_n{n}k{k}.pkl'
+    if os.path.exists(filepath):
+        with open(filepath, 'rb') as file:
+            symplectic_mats_list = pickle.load(file)
+        subgroups = clifford_subgroups(k,symplectic_mats_list)
+        order = subgroups.return_order()
+        print(f"n{n}k{k}",order)
+        print(subgroups.check_full_clifford())
+        print('')
+    else: 
+        print(f"n{n}k{k} - FILE MISSING.")
+    return order
+
+def print_code_logicals_data(n,k):
+    fileroot = '../../codes/codetables_data/'
+    filepath = fileroot + f'gates_n{n}k{k}.pkl'
+    if os.path.exists(filepath):
+        with open(filepath, 'rb') as file:
+            code_logicals_data = pickle.load(file)
+    print(code_logicals_data['Logical circuits'])
+    return code_logicals_data
