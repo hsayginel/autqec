@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+title: QEC Code Automorphisms for Logical Gates
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: 'Hasan '
+    family-names: Sayginel
+    email: hasan.sayginel.17@ucl.ac.uk
+    affiliation: UCL
+    orcid: 'https://orcid.org/0009-0006-8850-4044'
+repository-code: 'https://github.com/hsayginel/QEC_CodeAutomorphisms'
+license: GPL-3.0
