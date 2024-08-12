@@ -1,12 +1,15 @@
 import numpy as np
 from ldpc.mod2 import reduced_row_echelon, inverse 
 from utils.symplectic import symp_prod
+from utils.linalg import is_matrix_full_rank
 
 def compute_standard_form(G):
     """
     Returns the standard form of a stabilizer code. 
     See Nielsen & Chuang Section 10.5.7.
     """
+    if is_matrix_full_rank(G) == False:
+        raise AssertionError("Rows of G should be independent. Use a generating set of stabilizers.")
     n, m = G.shape[1] // 2, G.shape[0]
     k = n-m
     
