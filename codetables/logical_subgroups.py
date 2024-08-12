@@ -108,8 +108,8 @@ end if;
             i = pair[0]
             j = pair[1]
             SWAP_gates += convert_to_magma_mat(SWAP_gate(i+1,j+1,k),f"SWAP_{i+1}_{j+1}")
-            gates_var_names += f"SWAP_{i}_{j},"
-            gates_str += f"\"SWAP_({i},{j})\","
+            gates_var_names += f"SWAP_{i+1}_{j+1},"
+            gates_str += f"\"SWAP_({i+1},{j+1})\","
         gates_var_names = gates_var_names[:-1]
         gates_var_names += "]"
         gates_str = gates_str[:-1]
@@ -127,8 +127,8 @@ end if;
             i = pair[0]
             j = pair[1]
             CNOT_gates += convert_to_magma_mat(CNOT_gate(i,j,k),f"CNOT_{i+1}_{j+1}")
-            gates_var_names += f"CNOT_{i}_{j},"
-            gates_str += f"\"CNOT_({i},{j})\","
+            gates_var_names += f"CNOT_{i+1}_{j+1},"
+            gates_str += f"\"CNOT_({i+1},{j+1})\","
         gates_var_names = gates_var_names[:-1]
         gates_var_names += "]"
         gates_str = gates_str[:-1]
@@ -145,8 +145,8 @@ end if;
             i = pair[0]
             j = pair[1]
             CZ_gates += convert_to_magma_mat(CZ_gate(i+1,j+1,k),f"CZ_{i+1}_{j+1}")
-            gates_var_names += f"CZ_{i}_{j},"
-            gates_str += f"\"CZ_({i},{j})\","
+            gates_var_names += f"CZ_{i+1}_{j+1},"
+            gates_str += f"\"CZ_({i+1},{j+1})\","
         gates_var_names = gates_var_names[:-1]
         gates_var_names += "]"
         gates_str = gates_str[:-1]
@@ -160,8 +160,8 @@ end if;
         gates_var_names = "["
         for i in range(k):
             gamma_gates += convert_to_magma_mat(gamma_XYZ_gate(i+1,k),f"gammaXYZ{i+1}")
-            gates_str += f"\"gammaXYZ_{i}\","
-            gates_var_names += f"gammaXYZ{i},"
+            gates_str += f"\"gammaXYZ_{i+1}\","
+            gates_var_names += f"gammaXYZ{i+1},"
         gates_str = gates_str[:-1]
         gates_var_names = gates_var_names[:-1]
         gates_str += "]"
@@ -175,8 +175,8 @@ end if;
         gates_var_names = "["
         for i in range(k):
             gamma_gates += convert_to_magma_mat(gamma_XZY_gate(i+1,k),f"gammaXZY{i+1}")
-            gates_str += f"\"gammaXZY_{i}\","
-            gates_var_names += f"gammaXZY{i},"
+            gates_str += f"\"gammaXZY_{i+1}\","
+            gates_var_names += f"gammaXZY{i+1},"
         gates_str = gates_str[:-1]
         gates_var_names = gates_var_names[:-1]
         gates_str += "]"
@@ -191,8 +191,8 @@ end if;
         for i in range(k-1):
             j = i+1
             SWAP_network += convert_to_magma_mat(SWAP_gate(i+1,j+1,k),f"SWAP_{i+1}_{j+1}")
-            gates_var_names += f"SWAP_{i}_{j},"
-            gates_str += f"\"SWAP_({i},{j})\","
+            gates_var_names += f"SWAP_{i+1}_{j+1},"
+            gates_str += f"\"SWAP_({i+1},{j+1})\","
         gates_var_names = gates_var_names[:-1]
         gates_var_names += "]"
         gates_str = gates_str[:-1]
