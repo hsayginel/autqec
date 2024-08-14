@@ -3,7 +3,7 @@ from magma_interface import *
 
 d = '?'
 n_min = 1
-n_max = 25
+n_max = 20
 with open("codetables/error_log/logicals_errors.txt", "w") as file:
     for n in range(n_min,n_max+1):
         for k in range(n+1):
