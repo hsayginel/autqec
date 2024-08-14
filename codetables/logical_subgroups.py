@@ -77,6 +77,9 @@ order:=1;
 order:=Order(FG);
 printf "Order: ";
 order;
+structure:=GroupName(FG);
+printf "Structure: ";
+structure;
 if order eq 1 then 
     exit;
 end if;
@@ -95,6 +98,21 @@ end if;
                 # Extract the order
                 order = int(line.split(":")[1].strip())
                 return order
+        else:
+            return 1
+    
+    def return_structure(self):
+        commands = self.MAGMA_define_SG()
+        process = subprocess.Popen(['magma'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+        stdout, stderr = process.communicate(commands)
+        lines = stdout.strip().split('\n')
+
+        for line in lines:
+            if line.startswith("Structure:"):
+                # Extract the order
+                structure = line.split(":")[1].strip()
+                return structure
         else:
             return 1
     
@@ -345,7 +363,9 @@ def codetables_check_all_gates(n,k):
             symplectic_mats_list = pickle.load(file)
         subgroups = clifford_subgroups(k,symplectic_mats_list)
         order = subgroups.return_order()
+        structure = subgroups.return_structure()
         print(f"n{n}k{k}",order)
+        print(f"n{n}k{k}",structure)
         print(subgroups.check_all_gates_individually())
         print('')
     else: 
@@ -363,7 +383,9 @@ def codetables_check_clifford_group(n,k):
             symplectic_mats_list = pickle.load(file)
         subgroups = clifford_subgroups(k,symplectic_mats_list)
         order = subgroups.return_order()
+        structure = subgroups.return_structure()
         print(f"n{n}k{k}",order)
+        print(f"n{n}k{k}",structure)
         print(subgroups.check_full_clifford())
         print('')
     else: 
@@ -371,10 +393,10 @@ def codetables_check_clifford_group(n,k):
     return order
 
 def print_code_logicals_data(n,k):
-    fileroot = '../../codes/codetables_data/'
+    fileroot = './logical_gates/'
     filepath = fileroot + f'gates_n{n}k{k}.pkl'
     if os.path.exists(filepath):
         with open(filepath, 'rb') as file:
             code_logicals_data = pickle.load(file)
-    print(code_logicals_data['Logical circuits'])
+    print(code_logicals_data['logical'])
     return code_logicals_data
