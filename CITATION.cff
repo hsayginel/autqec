@@ -15,8 +15,8 @@ authors:
     orcid: 'https://orcid.org/0009-0006-8850-4044'
 identifiers:
   - type: url
-    value: 'https://github.com/hsayginel/QEC_CodeAutomorphisms'
-repository-code: 'https://github.com/hsayginel/QEC_CodeAutomorphisms'
+    value: 'https://github.com/hsayginel/qecauts'
+repository-code: 'https://github.com/hsayginel/qecauts'
 license: GPL-3.0
 version: 1.0.0
 date-released: '2024-08-20'
