@@ -135,7 +135,6 @@ end if;
         return SWAP_gates, gates_var_names, gates_str
 
     def individual_CNOTs(self):
-        "Probably inefficient."
         k = self.k
         CNOT_gates = ""
         gates_var_names = "["
@@ -144,7 +143,7 @@ end if;
         for pair in combos:
             i = pair[0]
             j = pair[1]
-            CNOT_gates += convert_to_magma_mat(CNOT_gate(i,j,k),f"CNOT_{i+1}_{j+1}")
+            CNOT_gates += convert_to_magma_mat(CNOT_gate(i+1,j+1,k),f"CNOT_{i+1}_{j+1}")
             gates_var_names += f"CNOT_{i+1}_{j+1},"
             gates_str += f"\"CNOT_({i+1},{j+1})\","
         gates_var_names = gates_var_names[:-1]
@@ -365,7 +364,7 @@ def codetables_check_all_gates(n,k):
         order = subgroups.return_order()
         structure = subgroups.return_structure()
         print(f"n{n}k{k}",order)
-        print(f"n{n}k{k}",structure)
+        print(structure)
         print(subgroups.check_all_gates_individually())
         print('')
     else: 
@@ -385,7 +384,7 @@ def codetables_check_clifford_group(n,k):
         order = subgroups.return_order()
         structure = subgroups.return_structure()
         print(f"n{n}k{k}",order)
-        print(f"n{n}k{k}",structure)
+        print(structure)
         print(subgroups.check_full_clifford())
         print('')
     else: 
@@ -398,5 +397,4 @@ def print_code_logicals_data(n,k):
     if os.path.exists(filepath):
         with open(filepath, 'rb') as file:
             code_logicals_data = pickle.load(file)
-    print(code_logicals_data['logical'])
     return code_logicals_data
