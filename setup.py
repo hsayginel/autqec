@@ -6,7 +6,7 @@ setup(
     packages=find_packages(),
     author='Hasan Sayginel',
     author_email='hasan.sayginel.17@ucl.ac.uk',
-    description='Clifford gates via code automorphisms.',
+    description='Clifford gates from code automorphisms.',
     install_requires=[
         'numpy==1.26.2',
         'ldpc==0.1.50',
