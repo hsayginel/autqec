@@ -34,6 +34,28 @@ def reduce_triplets_to_qubits(triplets_list):
     reduced_list = list(elem_counts.keys())
     return reduced_list
 
+def reduce_doublets_to_qubits(doublets_list):
+    doublets = [ceil(x/2) for x in doublets_list]
+    # Count occurrences of each element
+    elem_counts = Counter(doublets)
+
+    # Assert that each element is repeated three times and is adjacent to identical neighbors
+    for element, count in elem_counts.items():
+        if count == 2:
+            # Find the index of the first occurrence of the element
+            first_index = doublets.index(element)
+            
+            # Check if the next element is identical
+            if (doublets[first_index + 1] == element):
+                continue  
+            else:
+                print(doublets)
+                raise AssertionError(f"Automorphism does not represent a physical operation. Element {element} is not repeated two times consecutively.")
+    
+    # Reduce the list by getting rid of redundant elements
+    reduced_list = list(elem_counts.keys())
+    return reduced_list
+
 def sort_with_swaps(lst):
     swaps = []
     n = len(lst)
