@@ -1,16 +1,17 @@
 from ZX_dualities import *
+from utils.qec import stabs_to_H_symp
 
 n = 5
 k = 1 
-d = '?'
-H_symp = np.load(f'codetables/parity_checks/H_symp_n{n}k{k}.npy')
-# code = qec_code_ZX_dualities_from_magma_with_intersection(n,k,d,H_symp)
-# auts_data = code.run('./tests/')
-# auts = auts_data['auts']
-
+d = 3
+stabs = ['XZZXI','IXZZX','XIXZZ','ZXIXZ']
+H_symp = stabs_to_H_symp(stabs)
+G,LX,LZ,D = compute_standard_form(H_symp)
+code = qec_code_ZX_dualities_from_magma_with_intersection(n,k,d,H_symp)
+auts_data = code.run('./tests/')
+auts = auts_data['auts']
 #######################################################################
 
-auts = [[(4, 6), (3, 5), (8, 10), (7, 9)], [(2, 1), (4, 5, 10, 7), (6, 9, 8, 3)], [(4, 8), (6, 10), (3, 7), (5, 9)]]
 phys_act = physical_circ_of_ZX_duality(H_symp,auts[1])
 bits_image = phys_act.bits_image
 circ, _ = phys_act.circ()
