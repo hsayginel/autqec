@@ -44,7 +44,7 @@ class qec_code_auts_from_magma:
         return three_bit_rep_order
 
     def preprocess_H_3bit(self):
-        H_rref, _, transform_rows, transform_cols = reduced_row_echelon(self.H_3bit)
+        H_rref, _, transform_rows, transform_cols = rref_mod2(self.H_3bit)
         qubit_labels_og = self.qubits_3bitrep_order()
         reordered_qubit_list = qubit_labels_og@transform_cols
         return reordered_qubit_list, H_rref, transform_rows, transform_cols
@@ -226,7 +226,7 @@ class qec_code_auts_from_magma_with_intersection:
         return three_bit_rep_order
 
     def preprocess_H_3bit(self):
-        H_rref, _, transform_rows, transform_cols = reduced_row_echelon(self.H_3bit)
+        H_rref, _, transform_rows, transform_cols = rref_mod2(self.H_3bit)
         qubit_labels_og = self.qubits_3bitrep_order()
         reordered_qubit_list = qubit_labels_og@transform_cols
         return reordered_qubit_list, H_rref, transform_rows, transform_cols

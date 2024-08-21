@@ -24,28 +24,25 @@ class qec_code_XY_dualities_from_magma_with_intersection:
         self.d = d
         self.H_symp = H_symp
 
-        # 2-bit rep of H
         m = H_symp.shape[0]
-        X_part = H_symp[:,:n].copy()
-        XZ_part = np.zeros((m,n),dtype=int)
-        for row_ind in range(m):
-            for col_ind in range(n):
-                XZ_part[row_ind,col_ind] = (H_symp[row_ind,col_ind] + H_symp[row_ind,col_ind+n])%2
-        self.H_2bit = np.hstack((X_part,XZ_part))
-        
+        X_part = H_symp[:,:n]
+        Z_part = H_symp[:,n:]
+        XZ_part = (X_part + Z_part)%2
+
+        self.H_X_XZ = np.hstack((X_part,XZ_part))
 
     def qubits_2bitrep_order(self):
         n = self.n
         qubit_doublets_list = np.arange(1,2*n+1,1) # Qubit triplets
-        magma_order = qubit_doublets_list.reshape((n,2)).flatten(order='F') # X | X + Z 
+        magma_order = qubit_doublets_list.reshape((n,2)).flatten(order='F') # X | X+Z
         X_part = magma_order[:n]
         XZ_part = magma_order[n:2*n]
-        two_bit_rep_order = np.concatenate((X_part,XZ_part)) # X | X + Z 
+        two_bit_rep_order = np.concatenate((X_part,XZ_part)) #  X | X+Z
         return two_bit_rep_order
     
     def preprocess_H(self):
         n = self.n
-        H_rref, _, transform_rows, transform_cols = reduced_row_echelon(self.H_2bit)
+        H_rref, _, transform_rows, transform_cols = rref_mod2(self.H_X_XZ)
         qubit_labels_og = self.qubits_2bitrep_order()
         reordered_qubit_list = qubit_labels_og@transform_cols
         return reordered_qubit_list, H_rref, transform_rows, transform_cols
@@ -232,9 +229,9 @@ class physical_circ_of_XY_duality:
 
         # 2-bit rep embedding
         id_mat = np.eye(n,dtype=int)
-        zeros = np.zeros_like(id_mat)
-        self.E_mat = np.vstack((np.hstack((id_mat,id_mat)),np.hstack((zeros,id_mat))))
-        self.EInv_mat = self.E_mat.copy()
+        zeros = np.zeros_like(id_mat,dtype=int)
+        self.E_mat = np.vstack((np.hstack((id_mat,zeros)),np.hstack((id_mat,id_mat))))
+        self.EInv_mat = np.array(np.mod(np.linalg.inv(self.E_mat),2),dtype=int)
 
     def swaps(self): 
         """
@@ -281,14 +278,14 @@ class physical_circ_of_XY_duality:
         Returns:
         np.ndarray: Permutation matrix.
         """     
-        # correct qubit order for 2-bit representation (X | Z)
+        # correct qubit order for 2-bit representation (X | X+Z)
         n = self.n   
         X_bits = [i for i in range(1, 2*n + 1, 2)]
-        Z_bits = [i for i in range(2, 2*n + 1, 2)]
-        qbit_order = X_bits + Z_bits
+        XZ_bits = [i for i in range(2, 2*n + 1, 2)]
+        q3bit_order = X_bits + XZ_bits
         new_aut = []
         for cycle in self.aut:
-            new_aut.append(tuple(qbit_order.index(x)+1 for x in cycle))
+            new_aut.append(tuple(q3bit_order.index(x)+1 for x in cycle))
         
         # Initialize the identity matrix of size n
         perm_matrix = np.eye(2*self.n,dtype=int)
@@ -409,7 +406,6 @@ class pauli_correction_XY_duality:
                 s_pauli_multiply, p = multiply_pauli_strings(s_pauli_multiply,s_pauli_phase,stabs_og_pauli[i],stabs_og_phases[i])
                 stabs_new_phases[stab_ind] = np.mod(stabs_new_phases[stab_ind] + p,4)
         assert np.allclose(s_vec_multiply%2,stabs_new)
-
         return stabs_new_phases
  
     def physical_circ_phases(self,physical_circ):
@@ -444,7 +440,7 @@ class pauli_correction_XY_duality:
 
         else:
             print(phase_diff)
-            raise AssertionError("Physical Pauli correction failed: multiples of i phases present.")
+            raise AssertionError("Pauli correction failed: multiples of i phases present.")
         
 
 class logical_circ_of_XY_duality:
@@ -628,7 +624,7 @@ class logical_circ_of_XY_duality:
             return  pauli_gates + logical_circ 
         else: 
             self.print_pauli_corrections()
-            raise AssertionError("Logical Pauli correction failed: multiples of i phases present.")
+            raise AssertionError("Pauli correction failed: multiples of i phases present.")
     
     def print_pauli_corrections(self):
         print('Stabilizers in new logicals')
@@ -674,16 +670,16 @@ class symplectic_mat_to_logical_circ:
         XZ_part = symplectic_mat_og[:k,k:]
         ZX_part = symplectic_mat_og[k:,:k]
         
-        if rank(XX_part) == k and rank(ZZ_part) == k:
+        if rank_mod2(XX_part) == k and rank_mod2(ZZ_part) == k:
             return None
-        elif rank(XZ_part) == k and rank(ZX_part) == k:
+        elif rank_mod2(XZ_part) == k and rank_mod2(ZX_part) == k:
             symplectic_mat[:,k:] = X_part
             symplectic_mat[:,:k] = Z_part
             for i in range(k):
                 H_circ.append(("H",i+1))
             self.symplectic_mat = symplectic_mat.copy()
             return H_circ
-        elif rank(XX_part) != k or rank(ZZ_part) != k:
+        elif rank_mod2(XX_part) != k or rank_mod2(ZZ_part) != k:
             qubit_indices = np.arange(k,dtype=int)
             for r in range(1, k + 1):  # r is the length of combinations
                 for combo in combinations(qubit_indices, r):
@@ -692,7 +688,7 @@ class symplectic_mat_to_logical_circ:
                         mat_copy[:,[i,i+k]] = mat_copy[:,[i+k,i]]
                     XX = mat_copy[:k,:k]
                     ZZ = mat_copy[k:,k:]
-                    if rank(XX) == k and rank(ZZ) == k:
+                    if rank_mod2(XX) == k and rank_mod2(ZZ) == k:
                         self.symplectic_mat = mat_copy.copy()
                         for i in combo:
                             H_circ.append(("H",int(i+1)))
@@ -719,7 +715,7 @@ class symplectic_mat_to_logical_circ:
             block_A = ZZ_part
             block_B = ZX_part
 
-        A_rref, A_rank, A_transform_rows, A_transform_cols = reduced_row_echelon(block_A)
+        A_rref, A_rank, A_transform_rows, A_transform_cols = rref_mod2(block_A)
         assert np.allclose(A_rref,np.eye(k))
         assert A_rank == k
 
@@ -757,14 +753,14 @@ class symplectic_mat_to_logical_circ:
         XX_part = self.symplectic_mat[:k,:k]
         ZZ_part = self.symplectic_mat[k:,k:]
         assert is_symplectic(self.symplectic_mat)
-        if rank(XX_part) != k or rank(ZZ_part) != k or is_symplectic(self.symplectic_mat) == False:
+        if rank_mod2(XX_part) != k or rank_mod2(ZZ_part) != k or is_symplectic(self.symplectic_mat) == False:
             raise AssertionError("Problem with Hadamards.")
 
-        # STEP 2: Logical S,CZ,Xsqrt,CX_(X,X) until XZ and ZX are zero rank.
+        # STEP 2: Logical S,CZ,Xsqrt,CX_(X,X) until XZ and ZX are zero rank_mod2.
         ##    2a: XZ part
         XZ_circ = None
         XZ_part = self.symplectic_mat[:k,k:]
-        if rank(XZ_part) != 0:
+        if rank_mod2(XZ_part) != 0:
             XZ_circ = self.find_phase_type_gates(gate_type='Z')
             for item in XZ_circ:
                 if 'CZ' in item:  
@@ -774,14 +770,14 @@ class symplectic_mat_to_logical_circ:
                     i = item[1]
                     self.symplectic_mat = (self.symplectic_mat @ S_gate(i,k))%2
         XZ_part = self.symplectic_mat[:k,k:]
-        if rank(XZ_part) != 0:
+        if rank_mod2(XZ_part) != 0:
             raise AssertionError("S and CZ gates did not bring the rank to 0.")
         if is_symplectic(self.symplectic_mat) == False:
             raise AssertionError("Problem with S and CZ gates.")
         ##    2b: ZX part
         ZX_circ = None
         ZX_part = self.symplectic_mat[k:,:k]
-        if rank(ZX_part) != 0:
+        if rank_mod2(ZX_part) != 0:
             ZX_circ = self.find_phase_type_gates(gate_type='X')
             for item in ZX_circ:
                 if 'C(X,X)' in item:  
@@ -791,7 +787,7 @@ class symplectic_mat_to_logical_circ:
                     i = item[1]
                     self.symplectic_mat = (self.symplectic_mat @ Xsqrt_gate(i,k))%2
         ZX_part = self.symplectic_mat[k:,:k]
-        if rank(ZX_part) != 0:
+        if rank_mod2(ZX_part) != 0:
             raise AssertionError("Xsqrt and CX(X,X) gates did not bring the rank to 0.")
         if is_symplectic(self.symplectic_mat) == False:
             raise AssertionError("Problem with Xsqrt and CX(X,X) gates.")
@@ -802,10 +798,10 @@ class symplectic_mat_to_logical_circ:
         XZ_part = self.symplectic_mat[:k,k:]
         ZX_part = self.symplectic_mat[k:,:k]
 
-        assert rank(XX_part) == k
-        assert rank(ZZ_part) == k
-        assert rank(XZ_part) == 0
-        assert rank(ZX_part) == 0
+        assert rank_mod2(XX_part) == k
+        assert rank_mod2(ZZ_part) == k
+        assert rank_mod2(XZ_part) == 0
+        assert rank_mod2(ZX_part) == 0
         assert is_symplectic(self.symplectic_mat)
 
         # STEP 3: CNOT circuits via Gaussian Elimination.

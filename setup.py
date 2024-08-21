@@ -9,7 +9,7 @@ setup(
     description='Clifford gates from code automorphisms.',
     install_requires=[
         'numpy==1.26.2',
-        'ldpc==0.1.50',
+        # 'ldpc==0.1.50',
         'pytest==8.3.1',
         'qiskit==1.1.1',
         'matplotlib==3.9.1',

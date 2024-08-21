@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import sparse
-from ldpc.mod2 import reduced_row_echelon, rank
+# from ldpc.mod2 import rref_mod2, rank
+import numba as nb
 
 def is_identity_matrix(matrix):
     """Checks if matrix is k x k identity."""
@@ -8,13 +9,85 @@ def is_identity_matrix(matrix):
         return False
     return np.all(np.eye(matrix.shape[0]) == matrix)
 
+def rank_mod2(matrix):
+     _, k, _, _ = rref_mod2(matrix)
+     return k 
+
 def is_matrix_full_rank(matrix):
     """Checks if matrix is full rank."""
     if matrix.ndim == 1:
         return True
     m = matrix.shape[0]
-    k = rank(matrix)
+    k = rank_mod2(matrix)
+    # k = rank(matrix)
     return m == k
+
+@nb.jit(nb.types.Tuple((nb.int8[:,:],nb.int64[:]))(nb.int8[:,:],nb.int64,nb.int64,nb.int64,nb.int64))
+def HowZ2(A,tB,nB,nC,r0):
+    pivots = []
+    B = A.copy()
+    if np.sum(A) == 0:
+        return B,np.array(pivots,dtype=nb.int64)
+    m = len(B)
+    r = r0
+    for j in range(nC):
+        for t in range(tB):
+            ## c is the column of B we are currently looking at
+            c = j + t * nB
+            iList = [i for i in range(r,m) if B[i,c] > 0]
+            if len(iList) > 0:
+                i = iList.pop(0)
+                pivots.append(c)
+                ## found j: if j > r, swap row j with row r
+                if i > r:  
+                    ## swap using bitflips - more elegant than array indexing
+                    B[r] = B[r] ^ B[i]
+                    B[i] = B[r] ^ B[i]
+                    B[r] = B[r] ^ B[i]
+                ## eliminate non-zero entries in column c apart from row r
+                for i in [i for i in range(r) if B[i,c] > 0] + iList:     
+                    B[i] = B[i] ^ B[r]
+                r +=1
+    return B,np.array(pivots,dtype=nb.int64)
+
+# @nb.jit
+def blockDims(n,nA=0,tB=1,nC=-1):
+    nA = min(n,nA)
+    nB = (n - nA) // tB
+    if nC < 0 or nC > nB:
+        nC = nB 
+    return nA,nB,nC
+
+def invRange(n,S):
+    '''return list of elements of range(n) NOT in S'''
+    return sorted(set(range(n)) - set(S))
+
+def ix_to_perm_mat(ix):
+    m = len(ix)
+    P = np.zeros((m,m),dtype=int)
+    for i in range(m):
+        P[ix[i],i] = 1
+    return P
+
+def rref_mod2(A,nA=0,tB=1,nC=-1,r0=0):
+    '''Return Howell matrix form modulo N plus transformation matrix U such that H = U @ A mod N'''
+    m,n = A.shape
+    A = np.array(A,dtype=np.int8)
+    B = np.hstack([A,np.eye(m,dtype=np.int8)])
+    nA,nB,nC = blockDims(n,nA,tB,nC)
+    HU, pivots = HowZ2(B,tB,nB,nC,r0)
+    ix = list(pivots) + invRange(n,pivots)
+    
+    # [rref_mod2_form, matrix_rank, transform_matrix_rows, transform_matrix_columns] 
+    H, U = HU[:,:n],HU[:,n:]
+    H = H[:,ix]
+    P = ix_to_perm_mat(ix)
+
+    return H, len(pivots), U, P
+
+def inv_mod2(mat):
+    H, r, U, P = rref_mod2(mat)
+    return (P@U)%2
 
 def CNOT_circ_from_GL_mat(matrix, full=True):
     """

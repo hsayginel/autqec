@@ -505,16 +505,16 @@ class symplectic_mat_to_logical_circ:
         XZ_part = symplectic_mat_og[:k,k:]
         ZX_part = symplectic_mat_og[k:,:k]
         
-        if rank(XX_part) == k and rank(ZZ_part) == k:
+        if rank_mod2(XX_part) == k and rank_mod2(ZZ_part) == k:
             return None
-        elif rank(XZ_part) == k and rank(ZX_part) == k:
+        elif rank_mod2(XZ_part) == k and rank_mod2(ZX_part) == k:
             symplectic_mat[:,k:] = X_part
             symplectic_mat[:,:k] = Z_part
             for i in range(k):
                 H_circ.append(("H",i+1))
             self.symplectic_mat = symplectic_mat.copy()
             return H_circ
-        elif rank(XX_part) != k or rank(ZZ_part) != k:
+        elif rank_mod2(XX_part) != k or rank_mod2(ZZ_part) != k:
             qubit_indices = np.arange(k,dtype=int)
             for r in range(1, k + 1):  # r is the length of combinations
                 for combo in combinations(qubit_indices, r):
@@ -523,7 +523,7 @@ class symplectic_mat_to_logical_circ:
                         mat_copy[:,[i,i+k]] = mat_copy[:,[i+k,i]]
                     XX = mat_copy[:k,:k]
                     ZZ = mat_copy[k:,k:]
-                    if rank(XX) == k and rank(ZZ) == k:
+                    if rank_mod2(XX) == k and rank_mod2(ZZ) == k:
                         self.symplectic_mat = mat_copy.copy()
                         for i in combo:
                             H_circ.append(("H",int(i+1)))
@@ -550,7 +550,7 @@ class symplectic_mat_to_logical_circ:
             block_A = ZZ_part
             block_B = ZX_part
 
-        A_rref, A_rank, A_transform_rows, A_transform_cols = reduced_row_echelon(block_A)
+        A_rref, A_rank, A_transform_rows, A_transform_cols = rref_mod2(block_A)
         assert np.allclose(A_rref,np.eye(k))
         assert A_rank == k
 
@@ -588,14 +588,14 @@ class symplectic_mat_to_logical_circ:
         XX_part = self.symplectic_mat[:k,:k]
         ZZ_part = self.symplectic_mat[k:,k:]
         assert is_symplectic(self.symplectic_mat)
-        if rank(XX_part) != k or rank(ZZ_part) != k or is_symplectic(self.symplectic_mat) == False:
+        if rank_mod2(XX_part) != k or rank_mod2(ZZ_part) != k or is_symplectic(self.symplectic_mat) == False:
             raise AssertionError("Problem with Hadamards.")
 
         # STEP 2: Logical S,CZ,Xsqrt,CX_(X,X) until XZ and ZX are zero rank.
         ##    2a: XZ part
         XZ_circ = None
         XZ_part = self.symplectic_mat[:k,k:]
-        if rank(XZ_part) != 0:
+        if rank_mod2(XZ_part) != 0:
             XZ_circ = self.find_phase_type_gates(gate_type='Z')
             for item in XZ_circ:
                 if 'CZ' in item:  
@@ -605,14 +605,14 @@ class symplectic_mat_to_logical_circ:
                     i = item[1]
                     self.symplectic_mat = (self.symplectic_mat @ S_gate(i,k))%2
         XZ_part = self.symplectic_mat[:k,k:]
-        if rank(XZ_part) != 0:
+        if rank_mod2(XZ_part) != 0:
             raise AssertionError("S and CZ gates did not bring the rank to 0.")
         if is_symplectic(self.symplectic_mat) == False:
             raise AssertionError("Problem with S and CZ gates.")
         ##    2b: ZX part
         ZX_circ = None
         ZX_part = self.symplectic_mat[k:,:k]
-        if rank(ZX_part) != 0:
+        if rank_mod2(ZX_part) != 0:
             ZX_circ = self.find_phase_type_gates(gate_type='X')
             for item in ZX_circ:
                 if 'C(X,X)' in item:  
@@ -622,7 +622,7 @@ class symplectic_mat_to_logical_circ:
                     i = item[1]
                     self.symplectic_mat = (self.symplectic_mat @ Xsqrt_gate(i,k))%2
         ZX_part = self.symplectic_mat[k:,:k]
-        if rank(ZX_part) != 0:
+        if rank_mod2(ZX_part) != 0:
             raise AssertionError("Xsqrt and CX(X,X) gates did not bring the rank to 0.")
         if is_symplectic(self.symplectic_mat) == False:
             raise AssertionError("Problem with Xsqrt and CX(X,X) gates.")
@@ -633,10 +633,10 @@ class symplectic_mat_to_logical_circ:
         XZ_part = self.symplectic_mat[:k,k:]
         ZX_part = self.symplectic_mat[k:,:k]
 
-        assert rank(XX_part) == k
-        assert rank(ZZ_part) == k
-        assert rank(XZ_part) == 0
-        assert rank(ZX_part) == 0
+        assert rank_mod2(XX_part) == k
+        assert rank_mod2(ZZ_part) == k
+        assert rank_mod2(XZ_part) == 0
+        assert rank_mod2(ZX_part) == 0
         assert is_symplectic(self.symplectic_mat)
 
         # STEP 3: CNOT circuits via Gaussian Elimination.
