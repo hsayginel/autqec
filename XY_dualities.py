@@ -737,7 +737,7 @@ class symplectic_mat_to_logical_circ:
     def find_CNOT_circuits(self):
         symplectic_mat = self.symplectic_mat.copy()
         XX_part_GL_matrix = symplectic_mat[:self.k,:self.k] 
-        CNOT_circ, reduced_mat = CNOT_circ_from_GL_mat(XX_part_GL_matrix)
+        CNOT_circ, reduced_mat = rref_mod2(XX_part_GL_matrix, CNOTs=True)
         assert is_identity_matrix(reduced_mat)
 
         return CNOT_circ[::-1]

@@ -57,7 +57,7 @@ def get_CNOT_circ(A,tB,nB,nC,r0):
                     B[i] = B[i] ^ B[r]
                     qc.append(('CNOT',(r+1,i+1)))
                 r +=1
-    return qc
+    return B,pivots,qc
 
 # @nb.jit
 def blockDims(n,nA=0,tB=1,nC=-1):
@@ -99,7 +99,12 @@ def rref_mod2(A,CNOTs=False):
         
         return H, len(pivots), U, P
     elif CNOTs: 
-        return get_CNOT_circ(B,tB,nB,nC,r0)
+        HU, pivots, qc = get_CNOT_circ(B,tB,nB,nC,r0)
+        ix = list(pivots) + invRange(n,pivots)
+        H, U = HU[:,:n],HU[:,n:]
+        H = H[:,ix]
+
+        return qc, H
 
 
 def rank_mod2(mat):
