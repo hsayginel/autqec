@@ -27,9 +27,9 @@ class qec_code_ZX_dualities_from_magma_with_intersection:
     def qubits_2bitrep_order(self):
         n = self.n
         qubit_doublets_list = np.arange(1,2*n+1,1) # Qubit triplets
-        magma_order = qubit_doublets_list.reshape((n,2)).flatten(order='F') # Z | X 
-        Z_part = magma_order[:n]
-        X_part = magma_order[n:2*n]
+        magma_order = qubit_doublets_list.reshape((n,2)).flatten(order='F') # X | Z 
+        X_part = magma_order[:n]
+        Z_part = magma_order[n:2*n]
         two_bit_rep_order = np.concatenate((X_part,Z_part)) #  X | Z
         return two_bit_rep_order
     
@@ -270,11 +270,11 @@ class physical_circ_of_ZX_duality:
         Returns:
         np.ndarray: Permutation matrix.
         """     
-        # correct qubit order for 2-bit representation (Z | X)
+        # correct qubit order for 2-bit representation (X | Z)
         n = self.n   
-        Z_bits = [i for i in range(1, 2*n + 1, 2)]
-        X_bits = [i for i in range(2, 2*n + 1, 2)]
-        q3bit_order = Z_bits + X_bits
+        X_bits = [i for i in range(1, 2*n + 1, 2)]
+        Z_bits = [i for i in range(2, 2*n + 1, 2)]
+        q3bit_order = X_bits + Z_bits
         new_aut = []
         for cycle in self.aut:
             new_aut.append(tuple(q3bit_order.index(x)+1 for x in cycle))
