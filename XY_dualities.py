@@ -715,9 +715,9 @@ class symplectic_mat_to_logical_circ:
             block_A = ZZ_part
             block_B = ZX_part
 
-        A_rref, A_rank, A_transform_rows, A_transform_cols = rref_mod2(block_A)
+        A_rref, pivots, A_transform_rows, A_transform_cols = rref_mod2(block_A)
         assert np.allclose(A_rref,np.eye(k))
-        assert A_rank == k
+        assert len(pivots) == k
 
         B_new = (A_transform_rows@block_B@A_transform_cols)%2
         is_symmetric = np.array_equal(B_new, B_new.T)

@@ -157,19 +157,16 @@ M_out = symp_mat_prods(gates,k)
 M_out_inv = symp_mat_prods(gates[::-1],k)
 assert np.allclose(M_in,M_out)
 assert np.allclose(M_in_inv,M_out_inv)
+
 gates_inv = symplectic_mat_to_logical_circ(M_in_inv).run()
-# print(gates_inv[::-1])
 M_out_inv2 = symp_mat_prods(gates_inv,k)
 M_out2 = symp_mat_prods(gates_inv[::-1],k)
 assert np.allclose(M_in_inv,M_out_inv)
 assert np.allclose(M_in,M_out2)
 
-#####################################
-# print()
-# print()
-# print()
-id_mat = id_mat = np.eye(2, dtype=int)
-id_mat = op_2bit_to_op_3bit_and_phase(id_mat)
-# print(clifford_circ_stab_update(id_mat,gates)[0])
-# print('')
-# print(clifford_circ_stab_update(id_mat,gates_inv[::-1])[0])
+#########################################################################################################
+k = 4
+M_in = (H_gate(1,k)@H_gate(3,k))%2
+gates = symplectic_mat_to_logical_circ(M_in).run()
+M_out = symp_mat_prods(gates,k)
+assert np.allclose(M_in,M_out)

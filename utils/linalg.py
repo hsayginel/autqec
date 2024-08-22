@@ -97,7 +97,7 @@ def rref_mod2(A,CNOTs=False):
         H = H[:,ix]
         P = ix_to_perm_mat(ix)
         
-        return H, len(pivots), U, P
+        return H, pivots, U, P
     elif CNOTs: 
         HU, pivots, qc = get_CNOT_circ(B,tB,nB,nC,r0)
         ix = list(pivots) + invRange(n,pivots)
@@ -109,8 +109,8 @@ def rref_mod2(A,CNOTs=False):
 
 def rank_mod2(mat):
     """Return rank of binary matrix."""
-    _, k, _, _ = rref_mod2(mat)
-    return k 
+    _, pivots, _, _ = rref_mod2(mat)
+    return len(pivots) 
 
 def is_matrix_full_rank(mat):
     """Checks if matrix is full rank."""
