@@ -495,46 +495,40 @@ class symplectic_mat_to_logical_circ:
         H_circ = []
         
         symplectic_mat_og = self.symplectic_mat.copy()
-        print(symplectic_mat_og)
-        symplectic_mat = symplectic_mat_og.copy()
+        symplectic_mat = self.symplectic_mat.copy()
         k = self.k
 
-        XX_part = symplectic_mat_og[:k,:k].copy()
-        ZZ_part = symplectic_mat_og[k:,k:].copy()
-        XZ_part = symplectic_mat_og[:k,k:].copy()
-        ZX_part = symplectic_mat_og[k:,:k].copy()
-
-        rk_XX = rank_mod2(XX_part)
-        rk_ZZ = rank_mod2(ZZ_part)
-
-        if rk_XX == k and rk_ZZ == k:
+        X_part = symplectic_mat_og[:,:k]
+        Z_part = symplectic_mat_og[:,k:]
+        XX_part = symplectic_mat_og[:k,:k]
+        ZZ_part = symplectic_mat_og[k:,k:]
+        XZ_part = symplectic_mat_og[:k,k:]
+        ZX_part = symplectic_mat_og[k:,:k]
+        
+        if rank_mod2(XX_part) == k and rank_mod2(ZZ_part) == k:
             return None
-        else: 
-            _, p_XZ, _, _ = rref_mod2(XZ_part) 
-            print(p_XZ)
-            print(ZX_part)
-            _, p_ZX, _, _ = rref_mod2(ZX_part) 
-            print(p_ZX)
-
-            if len(p_XZ) == k and len(p_ZX) == k:
-                symplectic_mat[:,:k] = symplectic_mat_og[:,k:].copy()
-                symplectic_mat[:,k:] = symplectic_mat_og[:,:k].copy()
-                for i in range(k):
-                    H_circ.append(("H",i+1))
-                self.symplectic_mat = symplectic_mat.copy()
-                return H_circ
-
-            H_ix_choices = list(set(p_XZ) | set(p_ZX))
-            print(H_ix_choices)
-            for i in H_ix_choices:
-                symplectic_mat[:,[i,i+k]] = symplectic_mat[:,[i+k,i]]
-                rk_XX_new = rank_mod2(symplectic_mat[:k,:k])
-                rk_ZZ_new = rank_mod2(symplectic_mat[k:,k:])
-                if (rk_XX_new >= rk_XX and rk_ZZ_new >= rk_ZZ) and not (rk_XX_new == rk_XX and rk_ZZ_new == rk_ZZ):
-                    H_circ.append(("H",i+1))
-                else:
-                    symplectic_mat[:,[i,i+k]] = symplectic_mat[:,[i+k,i]]
+        elif rank_mod2(XZ_part) == k and rank_mod2(ZX_part) == k:
+            symplectic_mat[:,k:] = X_part
+            symplectic_mat[:,:k] = Z_part
+            for i in range(k):
+                H_circ.append(("H",i+1))
             self.symplectic_mat = symplectic_mat.copy()
+            return H_circ
+        elif rank_mod2(XX_part) != k or rank_mod2(ZZ_part) != k:
+            qubit_indices = np.arange(k,dtype=int)
+            for r in range(1, k + 1):  # r is the length of combinations
+                for combo in combinations(qubit_indices, r):
+                    mat_copy = symplectic_mat_og.copy()
+                    for i in combo:
+                        mat_copy[:,[i,i+k]] = mat_copy[:,[i+k,i]]
+                    XX = mat_copy[:k,:k]
+                    ZZ = mat_copy[k:,k:]
+                    if rank_mod2(XX) == k and rank_mod2(ZZ) == k:
+                        self.symplectic_mat = mat_copy.copy()
+                        for i in combo:
+                            H_circ.append(("H",int(i+1)))
+                        return H_circ
+            raise AssertionError('Individual H gates failed.')
         return H_circ
     
     def find_phase_type_gates(self,gate_type):
