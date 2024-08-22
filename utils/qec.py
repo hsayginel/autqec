@@ -1,5 +1,4 @@
 import numpy as np
-# from ldpc.mod2 import rref_mod2, inverse 
 from utils.linalg import rref_mod2, inv_mod2
 from utils.symplectic import symp_prod
 from utils.linalg import is_matrix_full_rank
@@ -20,14 +19,16 @@ def compute_standard_form(G):
     ## LOGICALS
 
     # Step 1: Gaussian Elimination on G1 & adjust G2 rows & cols accordingly
-    G1_rref, r, G1_transform_rows, G1_transform_cols = rref_mod2(G1)
+    G1_rref, r_pivots, G1_transform_rows, G1_transform_cols = rref_mod2(G1)
+    r = len(r_pivots)
     G = np.hstack((G1_rref,(G1_transform_rows@G2@G1_transform_cols)%2))
 
     # Step 2: Swap columns r to n from X to Z block 
     G[:,r:n], G[:,n+r:2*n] = G[:,n+r:2*n].copy(), G[:,r:n].copy()
     E1 = G[:, :n]
     E2 = G[:, n:]
-    E1_rref, e, E_transform_rows, E_transform_cols = rref_mod2(E1)
+    E1_rref, e_pivots, E_transform_rows, E_transform_cols = rref_mod2(E1)
+    e = len(e_pivots)
     s = e - r
     G = np.hstack((E1_rref,(E_transform_rows@E2@E_transform_cols)%2))
     G[:,r:n], G[:,n+r:2*n] = G[:,n+r:2*n].copy(), G[:,r:n].copy()

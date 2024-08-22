@@ -34,7 +34,7 @@ def get_CNOT_circ(A,tB,nB,nC,r0):
     pivots = []
     B = A.copy()
     if np.sum(A) == 0:
-        return B,np.array(pivots,dtype=nb.int64)
+        return B,pivots,qc
     m = len(B)
     r = r0
     for j in range(nC):
