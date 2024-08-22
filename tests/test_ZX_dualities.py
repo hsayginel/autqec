@@ -8,7 +8,7 @@ stabs = ['XZZXI','IXZZX','XIXZZ','ZXIXZ']
 H_symp = stabs_to_H_symp(stabs)
 G,LX,LZ,D = compute_standard_form(H_symp)
 code = qec_code_ZX_dualities_from_magma_with_intersection(n,k,d,H_symp)
-auts_data = code.run('./tests/')
+auts_data = code.run('./tests/',save_auts=False)
 auts = auts_data['auts']
 #######################################################################
 
