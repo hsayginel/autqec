@@ -6,11 +6,10 @@ from utils.symplectic import *
 from itertools import combinations
 
 class circ_from_aut:
-    def __init__(self,H_symp,aut):
+    def __init__(self,H,aut):
         """
         Class for finding the physical qubit circuits of the 
-        generators of the automorphism groups of stabilizer QECCs
-        including appropriate Pauli corrections. 
+        generators of the automorphism groups of stabilizer QECCs. 
 
         3-bit representation
         --------------------
@@ -30,17 +29,16 @@ class circ_from_aut:
         | $\Gamma_{XYZ}$ | (1,3,2)         |
 
         Args:
-            H_symp (np.array): stabilizer generators of the QEC.
+            H (np.array): stabilizer generators of the QEC.
             aut (list): list of cycles representing the automorphism.
         """
+        if is_matrix_full_rank(H) == False:
+            raise AssertionError("Rows of H should be independent. Use a generating set of stabilizers.")
         if not isinstance(aut, list):
             raise TypeError("Aut must be a list of tuples.")
-        if is_matrix_full_rank(H_symp) == False:
-            raise AssertionError("Rows of H_symp should be independent. Use a generating set of stabilizers.")
-        
-        n = H_symp.shape[1]//2
+        n = H.shape[1]//2
         self.n = n
-        self.H_symp = H_symp
+        self.H = H
         self.aut = aut
         self.bits = np.arange(1,3*n+1,1)
         self.qubit_indices = np.arange(1,n+1,1)
@@ -161,17 +159,19 @@ class circ_from_aut:
 
 
 class logical_circ_and_pauli_correct:
-    def __init__(self, H_symp, phys_circ):
+    def __init__(self, H, phys_circ):
         """
         Class for finding appropriate Pauli corrections of 
-        Clifford gates of stabilizer QECCs. 
+        Clifford circuits to preserve stabilizers and infer
+        the corresponding logical action of the circuit. 
 
         Args: 
-            H_symp (np.array): 
+            H (np.array): stabilizer generators of the QEC.
+            phys_circ (list): quantum circuit.
         """
 
         # standard form 
-        G, LX, LZ, D = compute_standard_form(H_symp)
+        G, LX, LZ, D = compute_standard_form(H)
         self.G = G
         self.LX = LX
         self.D = D
@@ -197,14 +197,14 @@ class logical_circ_and_pauli_correct:
         # physical circuit
         self.phys_circ = phys_circ
         
-    def im_tableux(self):
+    def new_tableux(self):
         T_G_L = np.vstack([self.G,self.LX,self.LZ])
         T_G_L_4bit = op_2bit_to_op_3bit_and_phase(T_G_L)
         return clifford_circ_stab_update(T_G_L_4bit,self.phys_circ)
     
-    def im_tableux_anticomm(self):
+    def new_tableux_anticomm(self):
         omega = self.omega
-        b = np.mod(self.im_tableux()[1][:,self.n:] @ omega @ self.tableux.T @ omega,2)
+        b = np.mod(self.new_tableux()[1][:,self.n:] @ omega @ self.tableux.T @ omega,2)
         G_comp = b[:self.m].copy()
         L_comp = b[self.m:].copy()
         LX_comp = L_comp[:self.k].copy()
@@ -212,26 +212,23 @@ class logical_circ_and_pauli_correct:
         # TODO: add assertions
         return b, G_comp, L_comp
     
-    def U_ACT(self):
+    def logical_act(self):
         m = self.m
         k = self.k
-        _, G_comp, L_comp = self.im_tableux_anticomm()
+        _, G_comp, L_comp = self.new_tableux_anticomm()
         u_act = np.zeros((2*k,2*k),dtype=int)
         u_act[:,:k] = L_comp[:,m:m+k]
         u_act[:,k:] = L_comp[:,-k:]
 
         return u_act
     
-    def im_tableux_check_phases(self):
-        """ Phases of new stabilizers using mod 4 arithmetic. 
-                    {0,1,2,3} == {+1, +i, -1, -i}
-        (Note that Y operator is represented as XZ with phase +1.)"""
+    def new_tableux_pauli_prod_phases(self):
         n = self.n
         tableux = self.tableux
         tableux_pauli = self.tableux_pauli
         tableux_phases = self.tableux_phases
 
-        b,_,_ = self.im_tableux_anticomm()
+        b,_,_ = self.new_tableux_anticomm()
 
         # t_vec_multiply = np.zeros_like(len(b),dtype=int)
         tableux_new_phases = np.zeros(len(b),dtype=int)
@@ -245,36 +242,43 @@ class logical_circ_and_pauli_correct:
         return tableux_new_phases
                  
     def run(self):
-        """ Finds the required Pauli corrections X or Z to fix any -1 phases. """
-        logical_act = symplectic_mat_to_logical_circ(self.U_ACT()).run()
+        """ Finds the required Pauli corrections X or Z to fix any -1 phases of stabilizers. """
+        U_p = np.zeros(2*self.n,dtype=int)
         pauli_circ = []
         n = self.n
         m = self.m
         k = self.k
         T = self.tableux
 
-        U_p = np.zeros(2*self.n,dtype=int)
-        p = self.im_tableux()[0]
-        b, G_comp, L_comp = self.im_tableux_anticomm()
-        q = self.im_tableux_check_phases()
+        # find phase differences. 
+        p = self.new_tableux()[0]
+        q = self.new_tableux_pauli_prod_phases()
         phase_diff = np.mod(p - q, 4)
+        _, _, L_comp = self.new_tableux_anticomm()
+
+        # correct stabilizer phases. 
         for i in range(self.m):
             if phase_diff[i] != 0:
                 h = (i+n)%(2*n)
                 U_p = np.mod(U_p + T[h],2)
+                # update phase of logical which has support on a corrected stabilizer. 
                 for l_i,l in enumerate(L_comp):
-                    print(l)
                     if l[i] == 1:
                         phase_diff[m+l_i] = np.mod(phase_diff[m+l_i]+2,4)
+
+        # multiply X/Y/Z to logical circuit to match the phase to logical act. 
+        ## X-logicals of the code
         for i in range(m,m+k):
             if phase_diff[i] != 0:
                 h = (i+n)%(2*n)
                 U_p = np.mod(U_p + T[h],2)
+        ## Z-logicals of the code
         for i in range(m+k,m+2*k):
             if phase_diff[i] != 0:
                 h = (i+m+n)%(2*n)
                 U_p = np.mod(U_p + T[h],2)
 
+        # convert U_p into quantum circuit
         for i in range(n):
             if U_p[i] == 1 and U_p[i+n] == 0:
                 pauli_circ.append(('X',i+1))
@@ -282,10 +286,12 @@ class logical_circ_and_pauli_correct:
                 pauli_circ.append(('Z',i+1))
             elif U_p[i] == 1 and U_p[i+n] == 1:
                 pauli_circ.append(('Y',i+1))
+
+        logical_act = circ_from_symp_mat(self.logical_act()).run()
         return logical_act, pauli_circ + self.phys_circ
+    
 
-
-class symplectic_mat_to_logical_circ:
+class circ_from_symp_mat:
     def __init__(self,symplectic_mat):
         """
         Class to find the quantum circuit implemented by a symplectic transformation 
