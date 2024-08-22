@@ -5,7 +5,7 @@ from utils.qec import compute_standard_form
 from utils.symplectic import *
 from itertools import combinations
 
-class physical_circ_of_aut:
+class circ_from_aut:
     def __init__(self,H_symp,aut):
         """
         Class for finding the physical qubit circuits of the 
@@ -157,317 +157,133 @@ class physical_circ_of_aut:
         self.single_qubit_gates = single_qubit_gates
         physical_circuit = single_qubit_gates + physical_SWAP_gates
 
-        if single_qubit_gates:
-            self.pauli_correct_check = True
-
         return physical_circuit, self.symp_transform()
-    
-    def circ_w_pauli_correction(self):
-        """
-        Prepends Pauli corrections to the physical circuit.
-        """
-        physical_circuit, symp_mat = self.circ()
-        if self.pauli_correct_check:
-            G, LX, LZ, D = compute_standard_form(self.H_symp)
-            pauli_circ = pauli_correction(G, LX, D, LZ).run(symp_mat,physical_circuit)
-            physical_circuit = pauli_circ + physical_circuit 
-        return physical_circuit
 
-class pauli_correction:
-    def __init__(self, G, LX, D, LZ):
+
+class logical_circ_and_pauli_correct:
+    def __init__(self, H_symp, phys_circ):
         """
         Class for finding appropriate Pauli corrections of 
         Clifford gates of stabilizer QECCs. 
 
         Args: 
-            G (np.array): stabilizers.
-            LX (np.array): logical X operators.
-            D (np.array): destabilizers. 
-            LZ (np.array): logical Z operators. 
+            H_symp (np.array): 
         """
+
+        # standard form 
+        G, LX, LZ, D = compute_standard_form(H_symp)
+        self.G = G
+        self.LX = LX
+        self.D = D
+        self.LZ = LZ
+
+        # code parameters
         n = G.shape[1] // 2
         m = G.shape[0]
         self.n = n 
         self.m = m
-        T = np.vstack([G,LX,D,LZ]) # tableux
-        
-        # tableux check
-        T_symp_prod, omega = symp_prod(T,T,return_omega=True)
+        self.k = n-m
+
+        # tableux
+        tableux = np.vstack([G,LX,D,LZ]) 
+        T_symp_prod, omega = symp_prod(tableux,tableux,return_omega=True)
         self.omega = omega
         if np.allclose(T_symp_prod,omega) == False:
             raise AssertionError("Check stabilizer/destabilizer tableux.")
+        self.tableux = tableux
+        self.tableux_phases ,self.tableux_pauli = binary_vecs_to_paulis(tableux,phase_bit=True)
+        self.show_tableux = '\n'.join([' '.join(x) for x in binary_vecs_to_paulis(tableux)])
 
-        self.G = G
-        self.LX = LX
-        self.D = D
-        self.LZ = LZ
+        # physical circuit
+        self.phys_circ = phys_circ
+        
+    def im_tableux(self):
+        T_G_L = np.vstack([self.G,self.LX,self.LZ])
+        T_G_L_4bit = op_2bit_to_op_3bit_and_phase(T_G_L)
+        return clifford_circ_stab_update(T_G_L_4bit,self.phys_circ)
+    
+    def im_tableux_anticomm(self):
+        omega = self.omega
+        b = np.mod(self.im_tableux()[1][:,self.n:] @ omega @ self.tableux.T @ omega,2)
+        G_comp = b[:self.m].copy()
+        L_comp = b[self.m:].copy()
+        LX_comp = L_comp[:self.k].copy()
+        LZ_comp = L_comp[:self.k].copy()
+        # TODO: add assertions
+        return b, G_comp, L_comp
+    
+    def U_ACT(self):
+        m = self.m
+        k = self.k
+        _, G_comp, L_comp = self.im_tableux_anticomm()
+        u_act = np.zeros((2*k,2*k),dtype=int)
+        u_act[:,:k] = L_comp[:,m:m+k]
+        u_act[:,k:] = L_comp[:,-k:]
 
-        _,self.stabs_og_pauli = binary_vecs_to_paulis(G,phase_bit=True)
-        self.H_4bit = op_2bit_to_op_3bit_and_phase(G)
-        self.stabs_og_phases, self.stabs_og_3bit = self.H_4bit
-
-    def im_stabs(self,symp_mat):
-        """ Mapping of stabilizers via the symplectic transformation. """
-        stabs = self.G
-        stabs_new = np.mod(stabs@symp_mat,2)
-        return stabs_new
-
-    def im_stabs_composition(self,symp_mat):
-        """ Original stabilizer composition of new stabilizers. """
-        stabs_new = self.im_stabs(symp_mat)
-        return symp_prod(stabs_new,self.D)
-
-    def im_stabs_check_phases(self,symp_mat):
+        return u_act
+    
+    def im_tableux_check_phases(self):
         """ Phases of new stabilizers using mod 4 arithmetic. 
                     {0,1,2,3} == {+1, +i, -1, -i}
         (Note that Y operator is represented as XZ with phase +1.)"""
-        # old stabs
-        stabs_og = self.G
-        stabs_og_phases = self.stabs_og_phases.copy()
-        stabs_og_pauli = self.stabs_og_pauli
-        # new stabs
-        stabs_new = self.im_stabs(symp_mat)
-        stabs_new_phases = np.zeros_like(stabs_og_phases)
-        # new stabs composition
-        stabs_new_composition = self.im_stabs_composition(symp_mat)
-        # multiply stabs
-        s_vec_multiply = np.zeros_like(stabs_og,dtype=int)
-        for stab_ind, s in enumerate(stabs_new_composition):
-            stabs_og_indices = np.where(s==1)[0]
-            s_pauli_multiply = ['I']*self.n
-            s_pauli_phase = 0
-            for i in stabs_og_indices:
-                s_vec_multiply[stab_ind] += stabs_og[i]
-                s_pauli_multiply, p = multiply_pauli_strings(s_pauli_multiply,s_pauli_phase,stabs_og_pauli[i],stabs_og_phases[i])
-                stabs_new_phases[stab_ind] = np.mod(stabs_new_phases[stab_ind] + p,4)
-        assert np.allclose(s_vec_multiply%2,stabs_new)
-        return stabs_new_phases
- 
-    def physical_circ_phases(self,physical_circ):
-        """ Phases of stabilizers after the action of Clifford circuits.
-                        {0,1,2,3} == {+1, +i, -1, -i}
-        """
-        H_4bit = self.H_4bit
-        return clifford_circ_stab_update(H_4bit,physical_circ)[0]
-                
-    def run(self,symp_mat,physical_circ):
+        n = self.n
+        tableux = self.tableux
+        tableux_pauli = self.tableux_pauli
+        tableux_phases = self.tableux_phases
+
+        b,_,_ = self.im_tableux_anticomm()
+
+        # t_vec_multiply = np.zeros_like(len(b),dtype=int)
+        tableux_new_phases = np.zeros(len(b),dtype=int)
+        for t_ind, t in enumerate(b):
+            t_indices = np.where(t==1)[0]
+            pauli_multiply = ['I']*self.n
+            pauli_phase = 0
+            for i in t_indices:
+                pauli_multiply, p = multiply_pauli_strings(pauli_multiply,pauli_phase,tableux_pauli[i],tableux_phases[i])
+                tableux_new_phases[t_ind] = np.mod(tableux_new_phases[t_ind] + p,4)
+        return tableux_new_phases
+                 
+    def run(self):
         """ Finds the required Pauli corrections X or Z to fix any -1 phases. """
-        stabs_im_phases = self.im_stabs_check_phases(symp_mat)
-        stabs_phys_circ_phases = (self.physical_circ_phases(physical_circ))
-        phase_diff = np.mod(stabs_im_phases - stabs_phys_circ_phases, 4)
-        
-        if np.all(phase_diff % 2 == 0) == True:
-            phase_diff = phase_diff/2
-            destab_indices = np.where(phase_diff==1)[0]
-            pauli_circs = []
-            for i in destab_indices:
-                pauli_circs += binary_vecs_to_paulis(self.D[i])
+        logical_act = symplectic_mat_to_logical_circ(self.U_ACT()).run()
+        pauli_circ = []
+        n = self.n
+        m = self.m
+        k = self.k
+        T = self.tableux
 
-            def find_Z_X_positions(lists):
-                gates = []
-                for _, sublist in enumerate(lists):
-                    for i, elem in enumerate(sublist):
-                        if elem in ('Z', 'X'):
-                            gates.append((elem, i + 1))  
-                return gates
-            
-            return find_Z_X_positions(pauli_circs)
+        U_p = np.zeros(2*self.n,dtype=int)
+        p = self.im_tableux()[0]
+        b, G_comp, L_comp = self.im_tableux_anticomm()
+        q = self.im_tableux_check_phases()
+        phase_diff = np.mod(p - q, 4)
+        for i in range(self.m):
+            if phase_diff[i] != 0:
+                h = (i+n)%(2*n)
+                U_p = np.mod(U_p + T[h],2)
+                for l_i,l in enumerate(L_comp):
+                    print(l)
+                    if l[i] == 1:
+                        phase_diff[m+l_i] = np.mod(phase_diff[m+l_i]+2,4)
+        for i in range(m,m+k):
+            if phase_diff[i] != 0:
+                h = (i+n)%(2*n)
+                U_p = np.mod(U_p + T[h],2)
+        for i in range(m+k,m+2*k):
+            if phase_diff[i] != 0:
+                h = (i+m+n)%(2*n)
+                U_p = np.mod(U_p + T[h],2)
 
-        else:
-            print(phase_diff)
-            raise AssertionError("Pauli correction failed: multiples of i phases present.")
+        for i in range(n):
+            if U_p[i] == 1 and U_p[i+n] == 0:
+                pauli_circ.append(('X',i+1))
+            elif U_p[i] == 0 and U_p[i+n] == 1:
+                pauli_circ.append(('Z',i+1))
+            elif U_p[i] == 1 and U_p[i+n] == 1:
+                pauli_circ.append(('Y',i+1))
+        return logical_act, pauli_circ + self.phys_circ
 
-
-class logical_circ_of_aut:
-    def __init__(self,H_symp,aut):
-        """
-        Class for finding the logical circuits of the 
-        generators of the automorphism groups of QECCs
-        including appropriate Pauli corrections.
-
-        3-bit representation
-        --------------------
-        Paulis (Z | X | X+Z): 
-        I --> 000   
-        X --> 011   
-        Z --> 101   
-        Y --> 110   
-        
-        1-qubit Clifford operators: 
-        | Operators      |   Permutation   |
-        |----------------|-----------------|
-        | $H$            | (1,2)           |
-        | $S$            | (1,3)           |
-        | $\sqrt{X}$     | (2,3)           |
-        | $\Gamma_{XZY}$ | (1,2,3)         |
-        | $\Gamma_{XYZ}$ | (1,3,2)         |
-
-        Args:
-            H_symp (np.array): stabilizer generators of the QEC.
-            aut (list): list of cycles representing the automorphism.
-        """
-        if not isinstance(aut, list):
-            raise TypeError("Auts must be list of cycles.")
-        if is_matrix_full_rank(H_symp) == False:
-            raise AssertionError("Rows of H_symp should be independent. Use a generating set of stabilizers.")
-        self.aut = aut
-        self.H_symp = H_symp
-        
-        n = H_symp.shape[1]//2 
-        m = H_symp.shape[0] 
-        self.n = n # no of physical qubits
-        self.m = m # no of independent generators
-        self.k = n-m # no of logical qubits
-
-        # standard form 
-        G, LX, LZ, D = compute_standard_form(H_symp)
-        if G.ndim == 1:
-            G = G.reshape(1, -1)
-        if LX.ndim == 1:
-            LX = LX.reshape(1, -1)
-        if LZ.ndim == 1:
-            LZ = LZ.reshape(1, -1)
-        if D.ndim == 1:
-            D = D.reshape(1, -1)
-        self.G = G
-        self.LX = LX
-        self.LZ = LZ
-        self.D = D
-       
-        # automorphism gates
-        phys_act = physical_circ_of_aut(H_symp,aut)
-        phys_circ, phys_symp_transform = phys_act.circ()
-        self.phys_circ_w_pauli_correction = phys_act.circ_w_pauli_correction()
-        self.phys_circ = phys_circ
-        self.phys_symp_transform = phys_symp_transform
-        
-        # mapping of logicals
-        self.LX_new = LX @ phys_symp_transform
-        self.LZ_new = LZ @ phys_symp_transform
-
-    def print_phys_circ(self):
-        print("Physical circuit")
-        print(self.phys_circ)
- 
-    def print_physical_act(self):
-        LX_p = binary_vecs_to_paulis(self.LX,phase_bit=False)
-        LZ_p = binary_vecs_to_paulis(self.LZ,phase_bit=False)
-        LX_new_p = binary_vecs_to_paulis(self.LX_new,phase_bit=False)
-        LZ_new_p = binary_vecs_to_paulis(self.LZ_new,phase_bit=False)
-        print('X logicals')
-        print(LX_p,'-->',LX_new_p)
-        print('Z logicals')
-        print(LZ_p,'-->',LZ_new_p)
-
-    def construct_symplectic_mat(self):
-        """
-        Returns a 2k x 2k symplectic matrix representing 
-        the mapping of logical X and Z operators. 
-
-        S = | XX | XZ |
-            |---------|
-            | ZX | ZZ |
-        """
-        LX = self.LX
-        LZ = self.LZ
-        logicals_og = np.vstack((LZ,LX))
-        LX_new = self.LX_new
-        LZ_new = self.LZ_new
-        logicals_new = np.vstack((LX_new,LZ_new))
-        
-        symplectic_mat = symp_prod(logicals_new,logicals_og)
-
-        if is_symplectic(symplectic_mat) == False:
-            self.print_physical_act()
-            print(symplectic_mat)
-            raise AssertionError("Invalid representation of logical operators OR the automorphism does not represent a valid transformation.")
-        return symplectic_mat
-    
-    def circ(self):
-        """
-        Reverse engineers the logical circuit of the automorphism by considering
-        the symplectic matrix representation of the logical action. 
-
-        Note: Column operations correspond to Clifford gates. 
-        """
-        symplectic_mat_og = self.construct_symplectic_mat()
-        symplectic_mat = symplectic_mat_og.copy()
-        logical_circ = symplectic_mat_to_logical_circ(symplectic_mat).run()
-
-        if np.allclose(symp_mat_prods(logical_circ,self.k),symplectic_mat) == False:
-            raise AssertionError("Logical circuit is wrong.")
-        
-        return logical_circ, symplectic_mat
-    
-    def circ_w_pauli_correction(self):
-        # stabs
-        stabs = self.G
-        s_phases, s_paulis = binary_vecs_to_paulis(stabs,phase_bit=True)
-
-        # logical circuit phases
-        logical_circ, symplectic_mat = self.circ()
-        id_mat = np.eye(2*self.k, dtype=int)
-        id_mat = op_2bit_to_op_3bit_and_phase(id_mat)
-        logical_circ_phases, _ = clifford_circ_stab_update(id_mat,logical_circ)
-
-        # physical circuit phases
-        LX_LZ = np.vstack((self.LX,self.LZ))
-        LX_LZ_4bit = op_2bit_to_op_3bit_and_phase(LX_LZ)
-        LXLZ_phases, LXLZ_3bit = clifford_circ_stab_update(LX_LZ_4bit,self.phys_circ_w_pauli_correction)
-        LXLZ_new = LXLZ_3bit[:,self.n:]
-
-        stab_indices_mat = np.mod(symp_prod(LXLZ_new,self.D),2)
-        self.LX_LZ = LX_LZ
-        self.LXLZ_new = LXLZ_new
-        self.stab_indices_mat = stab_indices_mat 
-        
-        physical_circ_phases = np.zeros(2*self.k,dtype=int)
-        for l_ind, l in enumerate(LXLZ_new):
-            stab_indices = np.where(stab_indices_mat[l_ind]==1)[0]
-            _, l_pauli = binary_vecs_to_paulis(l,phase_bit=True)
-            pauli = l_pauli[0]
-            phase = LXLZ_phases[l_ind].copy()
-            for i in stab_indices:
-                pauli, phase = multiply_pauli_strings(pauli,phase,s_paulis[i],s_phases[i])
-            physical_circ_phases[l_ind] = phase
-
-        self.physical_circ_phases = physical_circ_phases 
-        self.logical_circ_phases = logical_circ_phases
-        phase_diff = np.array(np.abs(physical_circ_phases - logical_circ_phases),dtype=int)
-
-        pauli_gates = []
-        if np.all(phase_diff % 2 == 0) == True:
-            phase_diff = np.array(phase_diff/2,dtype=int)
-            X_part = phase_diff[:self.k]
-            Z_part = phase_diff[self.k:]
-            
-            for q in range(self.k):
-                if X_part[q] == 1 and Z_part[q] == 0:
-                    pauli_gates.append(('Z',q+1))
-                elif Z_part[q] == 1 and X_part[q] == 0:
-                    pauli_gates.append(('X',q+1))
-                elif X_part[q] == 1 and Z_part[q] == 1:
-                    X_logical_new = binary_vecs_to_paulis(symplectic_mat[q])[0][0]
-                    Z_logical_new = binary_vecs_to_paulis(symplectic_mat[q+self.k])[0][0]
-                    if X_logical_new == 'Z' and Z_logical_new == 'Y':
-                        pauli_gates.append(('X',q+1))
-                    elif X_logical_new == 'Y' and Z_logical_new == 'X':
-                        pauli_gates.append(('Z',q+1))
-                    else:
-                        pauli_gates.append(('X',q+1))
-                        pauli_gates.append(('Z',q+1))
-            return  pauli_gates + logical_circ 
-        else: 
-            self.print_pauli_corrections()
-            raise AssertionError("Pauli correction failed: multiples of i phases present.")
-    
-    def print_pauli_corrections(self):
-        print('Stabilizers in new logicals')
-        print(self.stab_indices_mat)
-        print('Logical circuit phase')
-        print(self.logical_circ_phases)
-        print('Physical circuit phase')
-        print(self.physical_circ_phases)
 
 class symplectic_mat_to_logical_circ:
     def __init__(self,symplectic_mat):
@@ -645,7 +461,6 @@ class symplectic_mat_to_logical_circ:
 
         logical_circ = []
         logical_circs = [H_circ,XZ_circ,ZX_circ,CNOT_circ]
-        # logical_circs = [CNOT_circ,ZX_circ,XZ_circ,H_circ]
 
         for circ in logical_circs:
             if circ:
