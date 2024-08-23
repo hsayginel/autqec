@@ -233,7 +233,7 @@ class physical_circ_of_XY_duality:
         # 2-bit rep embedding
         id_mat = np.eye(n,dtype=int)
         zeros = np.zeros_like(id_mat)
-        self.E_mat = np.vstack((np.hstack((id_mat,id_mat)),np.hstack((zeros,id_mat))))
+        self.E_mat = np.vstack((np.hstack((id_mat,zeros)),np.hstack((id_mat,id_mat))))
         self.EInv_mat = self.E_mat.copy()
 
     def swaps(self): 

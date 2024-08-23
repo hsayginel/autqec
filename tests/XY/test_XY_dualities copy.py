@@ -1,8 +1,8 @@
-from XY_dualities import *
+from old_XY_dualities import *
 from utils.qec import stabs_to_H_symp
 
-n = 5
-k = 1 
+n = 15
+k = 2
 d = '?'
 H_symp = np.load(f'codetables/parity_checks/H_symp_n{n}k{k}.npy') 
 code = qec_code_XY_dualities_from_magma_with_intersection(n,k,d,H_symp)
