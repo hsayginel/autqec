@@ -158,7 +158,7 @@ class qec_code_ZX_dualities_from_magma_with_intersection:
         code_auts_dict['time'] = time
 
         if save_auts == True:
-            with open(fileroot + f'auts_n{n}k{k}d{d}.pkl', 'wb') as file:
+            with open(fileroot + f'ZX_dualities_n{n}k{k}d{d}.pkl', 'wb') as file:
                 pickle.dump(code_auts_dict, file)
 
         return code_auts_dict
