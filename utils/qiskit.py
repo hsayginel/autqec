@@ -38,6 +38,8 @@ def construct_circuit(operations, k):
             qc.z(qubits-1)
         elif gate_type == 'X':
             qc.x(qubits-1)
+        elif gate_type == 'Y':
+            qc.y(qubits-1)
         else:
             print(f"Unsupported gate type: {gate_type}")
 
