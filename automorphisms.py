@@ -203,13 +203,20 @@ class logical_circ_and_pauli_correct:
         return clifford_circ_stab_update(T_G_L_4bit,self.phys_circ)
     
     def new_tableux_anticomm(self):
+        m = self.m
+        n = self.n
+        k = self.k
         omega = self.omega
-        b = np.mod(self.new_tableux()[1][:,self.n:] @ omega @ self.tableux.T @ omega,2)
-        G_comp = b[:self.m].copy()
-        L_comp = b[self.m:].copy()
-        LX_comp = L_comp[:self.k].copy()
-        LZ_comp = L_comp[:self.k].copy()
-        # TODO: add assertions
+        b = np.mod(self.new_tableux()[1][:,n:] @ omega @ self.tableux.T @ omega,2)
+        G_comp = b[:m].copy()
+        L_comp = b[m:].copy()
+
+        if np.allclose(b[:,n:-k],np.zeros((m+2*k,m),dtype=int)) == False:
+            raise AssertionError('Physical circuit maps operators outside of code space.')
+
+        if np.allclose(G_comp[:,m:],np.zeros((m,2*n-m),dtype=int)) == False:
+            raise AssertionError('Physical circuit does not preserve the stabilizer group.')
+        
         return b, G_comp, L_comp
     
     def U_logical_act(self):
