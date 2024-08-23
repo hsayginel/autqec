@@ -212,7 +212,7 @@ class logical_circ_and_pauli_correct:
         # TODO: add assertions
         return b, G_comp, L_comp
     
-    def logical_act(self):
+    def U_logical_act(self):
         m = self.m
         k = self.k
         _, G_comp, L_comp = self.new_tableux_anticomm()
@@ -284,8 +284,11 @@ class logical_circ_and_pauli_correct:
             elif U_p[i] == 1 and U_p[i+n] == 1:
                 pauli_circ.append(('Y',i+1))
 
-        logical_act = circ_from_symp_mat(self.logical_act()).run()
-        return logical_act, pauli_circ + self.phys_circ
+        U_ACT = self.U_logical_act()
+        circ_logical_act = circ_from_symp_mat(U_ACT).run()
+        if np.allclose(symp_mat_prods(circ_logical_act,self.k),U_ACT) == False:
+            raise AssertionError("Logical circuit is wrong.")
+        return circ_logical_act, pauli_circ + self.phys_circ
     
 
 class circ_from_symp_mat:
