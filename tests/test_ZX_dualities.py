@@ -12,16 +12,13 @@ auts_data = code.run('./tests/',save_auts=False)
 auts = auts_data['auts']
 #######################################################################
 
-phys_act = physical_circ_of_ZX_duality(H_symp,auts[1])
+phys_act = circ_from_ZX_duality(H_symp,auts[1])
 bits_image = phys_act.bits_image
 circ, _ = phys_act.circ()
-circ_pauli_corr = phys_act.circ_w_pauli_correction()
 print(circ)
-print(circ_pauli_corr)
+
 
 #######################################################################
-log_act = logical_circ_of_ZX_duality(H_symp,auts[1])
-logical_circ = log_act.circ()
-logical_circ_pauli_corr = log_act.circ_w_pauli_correction()
-print(logical_circ)
-print(logical_circ_pauli_corr)
+from automorphisms import *
+circ = logical_circ_and_pauli_correct(H_symp,circ).run()
+print(circ)
