@@ -261,10 +261,7 @@ class logical_circ_and_pauli_correct:
             if phase_diff[i] != 0:
                 h = (i+n)%(2*n)
                 U_p = np.mod(U_p + T[h],2)
-                # update phase of logical which has support on a corrected stabilizer. 
-                for l_i,l in enumerate(L_comp):
-                    if l[i] == 1:
-                        phase_diff[m+l_i] = np.mod(phase_diff[m+l_i]+2,4)
+
 
         # multiply X/Y/Z to logical circuit to match the phase to logical act. 
         ## X-logicals of the code
