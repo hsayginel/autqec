@@ -229,6 +229,16 @@ class logical_circ_and_pauli_correct:
 
         return u_act
     
+    # phases of U_act
+    def i_phases(self,U_ACT):
+        k = len(U_ACT)//2
+        p = np.zeros(2*k,dtype=int)
+        for row in range(2*k):
+            for i in range(k):
+                if U_ACT[row,i] == 1 and U_ACT[row,i+k] == 1:
+                    p[row] = (p[row] + 1)%4
+        return p
+    
     def new_tableux_pauli_prod_phases(self):
         n = self.n
         m = self.m
@@ -246,6 +256,8 @@ class logical_circ_and_pauli_correct:
             for i in t_indices:
                 pauli_multiply, p = multiply_pauli_strings(pauli_multiply,pauli_phase,tableux_pauli[i],tableux_phases[i])
                 tableux_new_phases[t_ind] = np.mod(tableux_new_phases[t_ind] + p,4)
+        self.i_phases_from_Y_ops = self.i_phases(self.U_logical_act())
+        tableux_new_phases[m:] = (tableux_new_phases[m:].copy()+self.i_phases_from_Y_ops)%4
         return tableux_new_phases
                  
     def run(self):
