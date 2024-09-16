@@ -281,7 +281,6 @@ class logical_circ_and_pauli_correct:
                 h = (i+n)%(2*n)
                 U_p = np.mod(U_p + T[h],2)
 
-
         # multiply X/Y/Z to logical circuit to match the phase to logical act. 
         ## X-logicals of the code
         for i in range(m,m+k):
