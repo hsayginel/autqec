@@ -102,7 +102,7 @@ class circ_from_aut:
         perms (list of tuples): List of tuples representing cycles in the permutation.
 
         Returns:
-        np.ndarray: Permutation matrix.
+        perm_matrix (np.array): Permutation matrix.
         """     
         # correct qubit order for 3-bit representation (X+Z | Z | X)
         n = self.n   
@@ -148,7 +148,6 @@ class circ_from_aut:
         Returns the circuit of the automorphism as 
         1-qubit Cliffords + SWAPs.
         """        
-        self.pauli_correct_check = False
 
         physical_SWAP_gates, ordered_qubit_triplets = self.swaps()
         single_qubit_gates = self.single_qubit_cliffords(ordered_qubit_triplets)
@@ -229,8 +228,11 @@ class logical_circ_and_pauli_correct:
 
         return u_act
     
-    # phases of U_act
     def i_phases(self,U_ACT):
+        """
+            Returns a phase vector that operators pick up via U_ACT.
+            Phases: {0,1,2,3} == {+1, +i, -1, -i}
+        """
         k = len(U_ACT)//2
         p = np.zeros(2*k,dtype=int)
         for row in range(2*k):
@@ -273,7 +275,8 @@ class logical_circ_and_pauli_correct:
         p = self.new_tableux()[0]
         q = self.new_tableux_pauli_prod_phases()
         phase_diff = np.mod(p - q, 4)
-        _, _, L_comp = self.new_tableux_anticomm()
+        if np.all(phase_diff % 2 == 0) == False: # check there are no i or -i phases. 
+            raise AssertionError("Pauli correction to the physical circuit failed.")
 
         # correct stabilizer phases. 
         for i in range(self.m):
@@ -320,9 +323,6 @@ class circ_from_symp_mat:
         assert is_symplectic(symplectic_mat)
 
         k = symplectic_mat.shape[0] // 2
-
-        # self.k = k
-        # self.symplectic_mat = symplectic_mat.copy()
 
         # invert symplectic matrix
         omega = np.eye(2*k,dtype=int)
