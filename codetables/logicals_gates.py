@@ -2,11 +2,11 @@ from automorphisms import *
 from magma_interface import *
 
 d = '?'
-n_min = 1
+n_min = 2
 n_max = 20
 with open("codetables/error_log/logicals_errors.txt", "w") as file:
     for n in range(n_min,n_max+1):
-        for k in range(n+1):
+        for k in range(1,n+1):
             try: 
                 print("Processing code [[{},{}]]".format(n,k))
                 H_symp = np.load(f'codetables/parity_checks/H_symp_n{n}k{k}.npy')
