@@ -315,14 +315,10 @@ class circ_from_XY_duality:
         Returns the circuit of the automorphism as 
         1-qubit Cliffords + SWAPs.
         """        
-        self.pauli_correct_check = False
-
+        
         physical_SWAP_gates, ordered_qubit_doublets = self.swaps()
         single_qubit_gates = self.single_qubit_cliffords(ordered_qubit_doublets)
         self.single_qubit_gates = single_qubit_gates
         physical_circuit = single_qubit_gates + physical_SWAP_gates
-
-        if single_qubit_gates:
-            self.pauli_correct_check = True
 
         return physical_circuit, self.symp_transform()
