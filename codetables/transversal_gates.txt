@@ -1,8 +1,0 @@
-F<w> := GF(4);
-n := 7;
-Q := QECC(F,n,1);
-autgroup := AutomorphismGroup(Q);
-h := Sym(3*n)!(1,2)(4,5)(7,8)(10,11)(13,14)(16,17)(19,20);
-s := Sym(3*n)!(2,3)(5,6)(8,9)(11,12)(14,15)(17,18)(20,21);
-h in autgroup;
-s in autgroup;
