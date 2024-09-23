@@ -4,18 +4,7 @@ import subprocess
 from utils.symplectic import *
 from itertools import combinations, permutations
 import os
-
-def convert_to_magma_mat(mat,mat_name='M'):
-    """
-    Args: 
-        mat (np.array): matrix 
-    """
-    mat = np.array(mat,dtype=int)
-    n_rows, n_cols = mat.shape
-    mat_str = [','.join(map(str, row)) for row in mat]
-    mat_str = ',\n'.join(mat_str)
-    magma_code = f"{mat_name} := Matrix(GF(2), {n_rows}, {n_cols},\n" + "[" + mat_str + "]);\n"
-    return magma_code 
+from utils.magma import convert_to_magma_mat
 
 class clifford_subgroups:
     def __init__(self,k,symplectic_mat_list):
