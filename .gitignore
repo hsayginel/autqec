@@ -3,7 +3,3 @@
 *.ipynb_checkpoints
 .DS_store
 future
-codes.py
-2GBA*
-codetables/run.py
-future
