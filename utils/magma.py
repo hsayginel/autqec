@@ -76,7 +76,6 @@ if order eq 1 then
     exit;
 end if;
 {A_magma}
-A;
 A in SG;
         """
     return commands
