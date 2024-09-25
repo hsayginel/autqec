@@ -6,18 +6,14 @@ def basic_test():
     n = 10
     # SWAPS
     aut1 = [(1,4),(2,5),(3,6),(7,13),(8,14),(9,15)]
-    physical_act = physical_circ_of_aut(np.eye(10),aut1)
-    print(physical_act.circ())
+    physical_act = circ_from_aut(np.eye(10),aut1)
+    print(physical_act.circ()[0])
 
     # Single-qubit Cliffords
     aut2 = [(1,2,3),(4,5),(8,9),(11,10,12),(13,15)]
-    physical_act = physical_circ_of_aut(np.eye(10),aut1)
-    print(physical_act.circ())
+    physical_act = circ_from_aut(np.eye(10),aut2)
+    print(physical_act.circ()[0])
 
-    # Both
-    aut3 = aut1+aut2
-    physical_act = physical_circ_of_aut(np.eye(10),aut1)
-    print(physical_act.circ())
 ####################################################
 
 def test_auts_symplectic_mats():
@@ -29,31 +25,31 @@ def test_auts_symplectic_mats():
     gamma_XYZ = [(1,3,2)]
 
     # H
-    act = physical_circ_of_aut(np.eye(2),H)
+    act = circ_from_aut(np.eye(2),H)
     symp_mat = act.symp_transform()
     assert np.allclose(symp_mat,H_gate(1,1))
     assert act.circ()[0][0][0] == 'H'
 
     # Xsqrt
-    act = physical_circ_of_aut(np.eye(2),Xsqrt)
+    act = circ_from_aut(np.eye(2),Xsqrt)
     symp_mat = act.symp_transform()
     assert np.allclose(symp_mat,Xsqrt_gate(1,1))
     assert act.circ()[0][0][0] == 'Xsqrt'
 
     # S
-    act = physical_circ_of_aut(np.eye(2),S)
+    act = circ_from_aut(np.eye(2),S)
     symp_mat = act.symp_transform()
     assert np.allclose(symp_mat,S_gate(1,1))
     assert act.circ()[0][0][0] == 'S'
 
     # gamma_XYZ
-    act = physical_circ_of_aut(np.eye(2),gamma_XYZ)
+    act = circ_from_aut(np.eye(2),gamma_XYZ)
     symp_mat = act.symp_transform()
     assert np.allclose(symp_mat,np.array([[1,1],[1,0]]))
     assert act.circ()[0][0][0] == 'GammaXYZ'
 
     # gamma_XZY
-    act = physical_circ_of_aut(np.eye(2),gamma_XZY)
+    act = circ_from_aut(np.eye(2),gamma_XZY)
     symp_mat = act.symp_transform()
     assert np.allclose(symp_mat,np.array([[0,1],[1,1]]))
     assert act.circ()[0][0][0] == 'GammaXZY'
@@ -71,9 +67,9 @@ def n5k1d3():
     [(1, 5, 13, 10, 8),(2, 6, 14, 11, 9),(3, 4, 15, 12, 7)]]
     
     for aut in auts:
-        phys_act = physical_circ_of_aut(H_symp,aut)        
-        circ = phys_act.circ_w_pauli_correction()
-        print(circ)
+        phys_act = circ_from_aut(H_symp,aut)        
+        circ = phys_act.circ()
+        print(circ[0])
         
        
         
@@ -96,9 +92,9 @@ def steane():
             [(1, 7, 4),(2, 8, 5),(3, 9, 6),(10, 19, 13),(11, 20, 14),(12, 21, 15)],
             [(1, 4, 7, 10, 13, 16, 19),(2, 5, 8, 11, 14, 17, 20),(3, 6, 9, 12, 15, 18, 21)]]
     for aut in auts:
-        phys_act = physical_circ_of_aut(H_symp,aut)        
-        circ = phys_act.circ_w_pauli_correction()
-        print(circ)
+        phys_act = circ_from_aut(H_symp,aut)        
+        circ = phys_act.circ()
+        print(circ[0])
 
 
 ######
