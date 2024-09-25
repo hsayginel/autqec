@@ -19,12 +19,12 @@ with open("codetables/ZX_dualities/logicals_errors.txt", "w") as file:
                 gates['logical'] = []
                 symp_mats = []
                 for aut in auts:
-                    phys_act = circ_from_ZX_duality(H_symp,aut)        
-                    phys_circ,_ = phys_act.circ()
+                    phys_act = circ_from_ZX_duality(H_symp,aut)            
+                    circ, _ = phys_act.circ()
+                    logical_act = logical_circ_and_pauli_correct(H_symp,circ)   
+                    symplectic_mat = logical_act.U_logical_act()
+                    logical_circ, phys_circ = logical_act.run()
                     gates['physical'].append(phys_circ)
-                    logical_act = logical_circ_and_pauli_correct(H_symp,phys_circ)   
-                    logical_circ, symplectic_mat = logical_act.run()
-                    logical_circ,_ = logical_act.run()
                     gates['logical'].append(logical_circ)
                     symp_mats.append(symplectic_mat)
 
