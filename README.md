@@ -3,6 +3,8 @@ autqec (optionally pronounced as 'oat cake') is a Python package for studying fa
 
 autqec can identify transversal, *SWAP*-transversal and short-depth arbitrary Clifford circuits that preserve the stabilizer group and has non-trivial logical action on the logical qubits. Outline of the algorithms for finding logical Clifford operators via code automorphisms is given below.
 
+![Algorithm Outline](algorithm_outline.png)
+
 ## Installation (from source)
 Download a local copy and run:
 
