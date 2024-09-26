@@ -12,7 +12,8 @@ setup(
         'pytest==8.3.1',
         'qiskit==1.1.1',
         'matplotlib==3.9.1',
-        'pylatexenc==2.10'
+        'pylatexenc==2.10',
+        'numba==0.60.0'
     ],)
 
 # MAGMA V2.28-8: http://magma.maths.usyd.edu.au/magma/. 
