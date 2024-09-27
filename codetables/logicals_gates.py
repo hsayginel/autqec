@@ -10,7 +10,7 @@ with open("codetables/error_log/logicals_errors.txt", "w") as file:
             try: 
                 print("Processing code [[{},{}]]".format(n,k))
                 H_symp = np.load(f'codetables/parity_checks/H_symp_n{n}k{k}.npy')
-                auts_file = f'codetables/auts_data_w_intersection/auts_n{n}k{k}d?.pkl'
+                auts_file = f'codetables/auts_data_w_intersection/auts_n{n}k{k}d_.pkl'
                 with open(auts_file, 'rb') as f:
                     code_auts_dict = pickle.load(f)
                 auts = code_auts_dict['auts']
