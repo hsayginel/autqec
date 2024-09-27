@@ -1,7 +1,7 @@
 from ZX_dualities import *
 from automorphisms import *
 
-d = '?'
+d = '_'
 n_min = 1
 n_max = 44
 with open("codetables/ZX_dualities/logicals_errors.txt", "w") as file:

@@ -5,7 +5,7 @@ n_min = 1
 n_max = 50
 k_min = 0
 k_max = n_max 
-d = '?'
+d = '_'
 with open("codetables/ZX_dualities/errorlog.txt", "w") as file:
     for n in range(n_min,n_max+1):
         for k in range(k_min,n+1):

@@ -5,7 +5,7 @@ n_min = 28
 n_max = 30
 k_min = 2
 k_max = n_max 
-d = '?'
+d = '_'
 with open("codetables/error_log/auts_data_errors.txt", "w") as file:
     for n in range(n_min,n_max+1):
         for k in range(k_min,k_max+1):

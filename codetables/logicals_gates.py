@@ -1,7 +1,7 @@
 from automorphisms import *
 from magma_interface import *
 
-d = '?'
+d = '_'
 n_min = 2
 n_max = 20
 with open("codetables/error_log/logicals_errors.txt", "w") as file:
