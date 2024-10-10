@@ -1,0 +1,66 @@
+
+        // Define a function to find prime factors
+        PrimeFactors := function(n)
+            // Use Factorization function to find prime factors
+            F := Factorization(n);
+            
+            // Initialize an empty list to store prime factors
+            prime_factors := [];
+            
+            // Iterate through the factors and extract the primes
+            for pair in F do
+                Append(~prime_factors, pair[1]);
+            end for;
+            
+            // Return the list of prime factors
+            return prime_factors;
+        end function;
+        M := Matrix(GF(2), 9, 15,
+[1,0,0,0,0,0,0,0,0,1,1,1,0,1,0,
+0,1,0,0,0,0,0,0,0,1,0,0,1,1,1,
+0,0,1,0,0,0,0,0,0,1,1,1,0,0,1,
+0,0,0,1,0,0,0,0,0,1,1,0,1,1,0,
+0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,
+0,0,0,0,0,1,0,0,0,1,0,1,0,1,0,
+0,0,0,0,0,0,1,0,0,1,0,1,1,1,1,
+0,0,0,0,0,0,0,1,0,1,1,1,1,0,1,
+0,0,0,0,0,0,0,0,1,1,1,0,1,0,0]);
+I := Matrix(GF(2), 5, 15,
+[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,
+0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,
+0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,
+0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,
+0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+
+        C1 := LinearCode(M);
+        C1;
+        C2 := LinearCode(I);
+        printf "End
+";
+        printf "
+";
+        time
+        autgroup1 := AutomorphismGroup(C1); 
+        autgroup2 := AutomorphismGroup(C2);
+        autgroup := autgroup1 meet autgroup2;
+        autgroup_order := Order(autgroup);
+        printf "
+";
+        printf "Order: ";
+        autgroup_order;
+        printf "
+";
+        prime_factors := PrimeFactors(autgroup_order);
+
+        for p in prime_factors do
+            printf "Sylow Order: ";
+            p;
+            for g in Generators(Sylow(autgroup,p)) do
+                printf "---
+";
+                g;
+                printf "---
+";
+            end for;
+        end for;
+        
