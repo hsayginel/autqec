@@ -78,8 +78,8 @@ def CNOT_gate(i,j,n):
     i = i - 1
     j = j - 1
     eye = np.eye(2*n,dtype=int)
-    eye[:,i] = eye[:,i] + eye[:,j]
-    eye[:,j+n] = eye[:,i+n] + eye[:,j+n]
+    eye[:,j] = eye[:,i] + eye[:,j]
+    eye[:,i+n] = eye[:,i+n] + eye[:,j+n]
     return eye
 
 def gamma_XZY_gate(i,n):

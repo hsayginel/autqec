@@ -51,11 +51,11 @@ def get_CNOT_circ(A,tB,nB,nC,r0):
                     B[r] = B[r] ^ B[i]
                     B[i] = B[r] ^ B[i]
                     B[r] = B[r] ^ B[i]
-                    qc.append(('SWAP',(r+1,i+1)))
+                    qc.append(('SWAP',(i+1,r+1)))
                 ## eliminate non-zero entries in column c apart from row r
                 for i in [i for i in range(r) if B[i,c] > 0] + iList:     
                     B[i] = B[i] ^ B[r]
-                    qc.append(('CNOT',(r+1,i+1)))
+                    qc.append(('CNOT',(i+1,r+1)))
                 r +=1
     return B,pivots,qc
 
