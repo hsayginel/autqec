@@ -13,5 +13,8 @@ Download a local copy and run:
 ## Dependencies (for full functionality)
 MAGMA V2.28-8: http://magma.maths.usyd.edu.au/magma/. 
 
+## Citation 
+H. Sayginel, S. Koutsioumpas, M. Webster, A. Rajput, and D. E. Browne, Fault-Tolerant Logical Clifford Gates from Code Automorphisms, (2024), arXiv:2409.18175 [quant-ph].
+
 ## Acknowledgements
 This work is supported by various EPSRC grants. 
