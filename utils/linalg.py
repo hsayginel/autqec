@@ -80,6 +80,8 @@ def ix_to_perm_mat(ix):
 
 def rref_mod2(A,CNOTs=False):
     '''Return Howell matrix form modulo N plus transformation matrix U such that H = U @ A mod N'''
+    if A.ndim == 1:
+        A = A.reshape(1, -1)
     m,n = A.shape
     A = np.array(A,dtype=np.int8)
     B = np.hstack([A,np.eye(m,dtype=np.int8)])
@@ -123,6 +125,12 @@ def is_matrix_full_rank(mat):
 def inv_mod2(mat):
     _, _, U, P = rref_mod2(mat)
     return (P@U)%2
+
+def diag_mat(n, ix):
+    mat = np.zeros((n, n),dtype=int)
+    for i in ix:
+        mat[i, i] = 1
+    return mat
 
 def is_identity_matrix(mat):
     """Checks if matrix is k x k identity."""
