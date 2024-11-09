@@ -3,7 +3,6 @@ from utils.perms import *
 from utils.pauli import *
 from utils.qec import compute_standard_form
 from utils.symplectic import *
-from itertools import combinations
 
 class circ_from_aut:
     def __init__(self,H,aut):
@@ -313,180 +312,106 @@ class logical_circ_and_pauli_correct:
     
 
 class circ_from_symp_mat:
-    def __init__(self,symplectic_mat):
+    def __init__(self,symp_mat):
         """
         Class to find the quantum circuit implemented by a symplectic transformation 
         up to a logical Pauli correction. 
 
-        Gates: {H, CZ, S, Xsqrt, CX(X,X), CX}
+        Gates: {H, CNOT, CZ, S, Xsqrt, CX(X,X)}
         """
-        assert is_symplectic(symplectic_mat)
+        assert is_symplectic(symp_mat)
 
-        k = symplectic_mat.shape[0] // 2
+        k = symp_mat.shape[0] // 2
 
         # invert symplectic matrix
         omega = np.eye(2*k,dtype=int)
         omega[:,:k], omega[:,k:] = omega[:,k:].copy(), omega[:,:k].copy()
         self.k = k
-        self.symplectic_mat = omega@symplectic_mat.T@omega
+        self.symp_mat = omega@symp_mat.T@omega
 
-    def find_H_gates(self):
+    def H_gates(self):
         """ Return H gates. """
-        H_circ = []
-        
-        symplectic_mat_og = self.symplectic_mat.copy()
-        symplectic_mat = self.symplectic_mat.copy()
+        symp_mat = self.symp_mat.copy()
         k = self.k
 
-        X_part = symplectic_mat_og[:,:k]
-        Z_part = symplectic_mat_og[:,k:]
-        XX_part = symplectic_mat_og[:k,:k]
-        ZZ_part = symplectic_mat_og[k:,k:]
-        XZ_part = symplectic_mat_og[:k,k:]
-        ZX_part = symplectic_mat_og[k:,:k]
-        
-        if rank_mod2(XX_part) == k and rank_mod2(ZZ_part) == k:
-            return None
-        elif rank_mod2(XZ_part) == k and rank_mod2(ZX_part) == k:
-            symplectic_mat[:,k:] = X_part
-            symplectic_mat[:,:k] = Z_part
-            for i in range(k):
-                H_circ.append(("H",i+1))
-            self.symplectic_mat = symplectic_mat.copy()
-            return H_circ
-        elif rank_mod2(XX_part) != k or rank_mod2(ZZ_part) != k:
-            qubit_indices = np.arange(k,dtype=int)
-            for r in range(1, k + 1):  # r is the length of combinations
-                for combo in combinations(qubit_indices, r):
-                    mat_copy = symplectic_mat_og.copy()
-                    for i in combo:
-                        mat_copy[:,[i,i+k]] = mat_copy[:,[i+k,i]]
-                    XX = mat_copy[:k,:k]
-                    ZZ = mat_copy[k:,k:]
-                    if rank_mod2(XX) == k and rank_mod2(ZZ) == k:
-                        self.symplectic_mat = mat_copy.copy()
-                        for i in combo:
-                            H_circ.append(("H",int(i+1)))
-                        return H_circ
-            raise AssertionError('Individual H gates failed.')
-        return H_circ
+        XX_part = symp_mat[:k,:k].copy()
+        XZ_part = symp_mat[:k,k:].copy()
+        XX_part_rref, pivots, row_transform, col_transform = rref_mod2(XX_part)
+        rk_XX = len(pivots)
+        if rk_XX == k:
+            return []
+        symp_mat_top_half_new = np.hstack([row_transform@XX_part%2,row_transform@XZ_part%2])
+        B2 = symp_mat_top_half_new[rk_XX:,k:].copy()
+        _, H_pivots,_,_ = rref_mod2(B2)
+
+        return H_pivots
     
-    def find_phase_type_gates(self,gate_type):
-        """ Returns CZ, S, Xsqrt, C(X,X) gates. """
-        symplectic_mat_og = self.symplectic_mat.copy()
+    def decomp(self):
+        symp_mat = self.symp_mat.copy()
         k = self.k
-        XX_part = symplectic_mat_og[:k,:k]
-        ZZ_part = symplectic_mat_og[k:,k:]
-        XZ_part = symplectic_mat_og[:k,k:]
-        ZX_part = symplectic_mat_og[k:,:k]
+        self.H_pivots = self.H_gates()
+        diag_h = diag_mat(k,self.H_pivots)
+        id_m_diag_h = np.eye(k,dtype=int) - diag_h
 
-        if gate_type == 'Z':
-            gate_1 = 'S'
-            gate_2 = 'CZ'
-            block_A = XX_part
-            block_B = XZ_part
-        elif gate_type == 'X':
-            gate_1 = 'Xsqrt'
-            gate_2 = 'C(X,X)'
-            block_A = ZZ_part
-            block_B = ZX_part
+        U_H = np.zeros_like(symp_mat)
+        U_H[:k,:k] = id_m_diag_h
+        U_H[:k,k:] = diag_h
+        U_H[k:,:k] = diag_h
+        U_H[k:,k:] = id_m_diag_h
 
-        A_rref, pivots, A_transform_rows, A_transform_cols = rref_mod2(block_A)
-        assert np.allclose(A_rref,np.eye(k))
-        assert len(pivots) == k
+        symp_mat_new = symp_mat @ U_H 
 
-        B_new = (A_transform_rows@block_B@A_transform_cols)%2
-        is_symmetric = np.array_equal(B_new, B_new.T)
-        assert is_symmetric
+        C = symp_mat_new[:k,:k].copy()
+        A = symp_mat_new[k:,:k].copy() @ inv_mod2(C) % 2
+        B = symp_mat_new[:k,k:].copy() @ C.T % 2
 
-        circ = set()
-        for i in range(k):
-            if B_new[i, i] == 1:
-                circ.add((gate_1,i+1))
-            for j in range(i+1,k):
-                if i != j and B_new[i, j] == 1:
-                    circ.add((gate_2,(i+1,j+1)))
-
-        circ = sorted(circ)
-        return circ
+        id_mat = np.eye(2*k,dtype=int)
+        U_A = id_mat.copy()
+        U_A[k:,:k] = A.copy()
+        U_B = id_mat.copy()
+        U_B[:k,k:] = B.copy()
+        U_C = np.zeros_like(id_mat)
+        U_C[:k,:k] = C.copy()
+        U_C[k:,k:] = inv_mod2(C.copy()).T
+        
+        return U_A, U_B, U_C, U_H
     
-    def find_CNOT_circuits(self):
-        symplectic_mat = self.symplectic_mat.copy()
-        XX_part_GL_matrix = symplectic_mat[:self.k,:self.k] 
-        CNOT_circ, reduced_mat = rref_mod2(XX_part_GL_matrix,CNOTs=True)
+    def run(self):
+        U_A, U_B, U_C, U_H = self.decomp()
+
+        # H gates 
+        H_circ = [('H',i+1) for i in self.H_pivots]
+    
+        # CNOT gates 
+        k = self.k
+        CNOT_circ, reduced_mat = rref_mod2(U_C[:k,:k],CNOTs=True)
         assert is_identity_matrix(reduced_mat)
 
-        return CNOT_circ[::-1]
-        
-    def run(self):
-        """ Full algorithm for finding the quantum circuit of the 
-        logical action represented by the symplectic matrix.
-        """
-        k = self.k
+        # S / CZ gates
+        XZ_circ = set()
+        B = U_B[:k,k:]
+        for i in range(k):
+            if B[i, i] == 1:
+                XZ_circ.add(('S',i+1))
+            for j in range(i+1,k):
+                if i != j and B[i, j] == 1:
+                    XZ_circ.add(('CZ',(i+1,j+1)))
 
-        # STEP 1: Logical H until XX and ZZ are full rank.
-        H_circ = self.find_H_gates()
-        XX_part = self.symplectic_mat[:k,:k]
-        ZZ_part = self.symplectic_mat[k:,k:]
-        assert is_symplectic(self.symplectic_mat)
-        if rank_mod2(XX_part) != k or rank_mod2(ZZ_part) != k or is_symplectic(self.symplectic_mat) == False:
-            raise AssertionError("Problem with Hadamards.")
-
-        # STEP 2: Logical S,CZ,Xsqrt,CX_(X,X) until XZ and ZX are zero rank.
-        ##    2a: XZ part
-        XZ_circ = None
-        XZ_part = self.symplectic_mat[:k,k:]
-        if rank_mod2(XZ_part) != 0:
-            XZ_circ = self.find_phase_type_gates(gate_type='Z')
-            for item in XZ_circ:
-                if 'CZ' in item:  
-                    i, j = item[1] 
-                    self.symplectic_mat = (self.symplectic_mat @ CZ_gate(i,j,k))%2
-                elif 'S' in item:  
-                    i = item[1]
-                    self.symplectic_mat = (self.symplectic_mat @ S_gate(i,k))%2
-        XZ_part = self.symplectic_mat[:k,k:]
-        if rank_mod2(XZ_part) != 0:
-            raise AssertionError("S and CZ gates did not bring the rank to 0.")
-        if is_symplectic(self.symplectic_mat) == False:
-            raise AssertionError("Problem with S and CZ gates.")
-        ##    2b: ZX part
-        ZX_circ = None
-        ZX_part = self.symplectic_mat[k:,:k]
-        if rank_mod2(ZX_part) != 0:
-            ZX_circ = self.find_phase_type_gates(gate_type='X')
-            for item in ZX_circ:
-                if 'C(X,X)' in item:  
-                    i, j = item[1]  
-                    self.symplectic_mat = (self.symplectic_mat @ CX_XX_gate(i,j,k))%2
-                elif 'Xsqrt' in item:  
-                    i = item[1]
-                    self.symplectic_mat = (self.symplectic_mat @ Xsqrt_gate(i,k))%2
-        ZX_part = self.symplectic_mat[k:,:k]
-        if rank_mod2(ZX_part) != 0:
-            raise AssertionError("Xsqrt and CX(X,X) gates did not bring the rank to 0.")
-        if is_symplectic(self.symplectic_mat) == False:
-            raise AssertionError("Problem with Xsqrt and CX(X,X) gates.")
-
-
-        XX_part = self.symplectic_mat[:k,:k]
-        ZZ_part = self.symplectic_mat[k:,k:]
-        XZ_part = self.symplectic_mat[:k,k:]
-        ZX_part = self.symplectic_mat[k:,:k]
-
-        assert rank_mod2(XX_part) == k
-        assert rank_mod2(ZZ_part) == k
-        assert rank_mod2(XZ_part) == 0
-        assert rank_mod2(ZX_part) == 0
-        assert is_symplectic(self.symplectic_mat)
-
-        # STEP 3: CNOT circuits via Gaussian Elimination.
-        CNOT_circ = self.find_CNOT_circuits()
+        # Xsqrt / CX(X,X) gates 
+        ZX_circ = set()
+        A = U_A[k:,:k]
+        for i in range(k):
+            if A[i, i] == 1:
+                ZX_circ.add(('Xsqrt',i+1))
+            for j in range(i+1,k):
+                if i != j and A[i, j] == 1:
+                    ZX_circ.add(('C(X,X)',(i+1,j+1)))
 
         logical_circ = []
-        logical_circs = [H_circ,XZ_circ,ZX_circ,CNOT_circ]
+        logical_circs = [H_circ,CNOT_circ[::-1],XZ_circ,ZX_circ]
 
         for circ in logical_circs:
             if circ:
-                logical_circ.extend(circ)
+                logical_circ.extend(circ) 
+        
         return logical_circ

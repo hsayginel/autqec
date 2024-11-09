@@ -12,7 +12,7 @@ def random_symp_mats(h):
     return symp_mat
 
 n = 20
-for _ in range(100):
+for _ in range(10000):
     h = np.random.randint(0, 2, n).reshape((1,n))
     S1 = random_symp_mats(h)
     h = np.random.randint(0, 2, n).reshape((1,n))
