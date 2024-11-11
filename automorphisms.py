@@ -384,7 +384,7 @@ class circ_from_symp_mat:
     
         # CNOT gates 
         k = self.k
-        CNOT_circ, reduced_mat = rref_mod2(U_C[:k,:k],CNOTs=True)
+        CNOT_circ, reduced_mat = rref_mod2(U_C[:k,:k],CNOTs=True) # need to invert CNOT gates
         assert is_identity_matrix(reduced_mat)
 
         # S / CZ gates
