@@ -8,10 +8,10 @@ import re
 import pickle
 from itertools import combinations
 
-class qec_code_XY_dualities_from_magma_with_intersection:
+class qec_code_ZY_dualities_from_magma_with_intersection:
     def __init__(self,n,k,d,H_symp):
         """
-        H = (X | X+Z)
+        H = (Z | X+Z)
 
         Args:
             n (int): number of physical qubits
@@ -29,20 +29,20 @@ class qec_code_XY_dualities_from_magma_with_intersection:
         Z_part = H_symp[:,n:]
         XZ_part = (X_part + Z_part)%2
 
-        self.H_X_XZ = np.hstack((X_part,XZ_part))
+        self.H_Z_XZ = np.hstack((Z_part,XZ_part))
 
     def qubits_2bitrep_order(self):
         n = self.n
         qubit_doublets_list = np.arange(1,2*n+1,1) # Qubit triplets
-        magma_order = qubit_doublets_list.reshape((n,2)).flatten(order='F') # X | X+Z
-        X_part = magma_order[:n]
+        magma_order = qubit_doublets_list.reshape((n,2)).flatten(order='F') # Z | X+Z
+        Z_part = magma_order[:n]
         XZ_part = magma_order[n:2*n]
-        two_bit_rep_order = np.concatenate((X_part,XZ_part)) #  X | X+Z
+        two_bit_rep_order = np.concatenate((Z_part,XZ_part)) #  Z | X+Z
         return two_bit_rep_order
     
     def preprocess_H(self):
         n = self.n
-        H_rref, _, transform_rows, transform_cols = rref_mod2(self.H_X_XZ)
+        H_rref, _, transform_rows, transform_cols = rref_mod2(self.H_Z_XZ)
         qubit_labels_og = self.qubits_2bitrep_order()
         reordered_qubit_list = qubit_labels_og@transform_cols
         return reordered_qubit_list, H_rref, transform_rows, transform_cols
@@ -165,7 +165,7 @@ class qec_code_XY_dualities_from_magma_with_intersection:
         code_auts_dict['time'] = time
 
         if save_auts == True:
-            with open(fileroot + f'XY_dualities_n{n}k{k}d{d}.pkl', 'wb') as file:
+            with open(fileroot + f'YZ_dualities_n{n}k{k}d{d}.pkl', 'wb') as file:
                 pickle.dump(code_auts_dict, file)
 
         return code_auts_dict
@@ -191,7 +191,7 @@ class qec_code_XY_dualities_from_magma_with_intersection:
             aut_gens.append(one_aut_gen)
         return aut_gens, aut_gens_text
     
-class circ_from_XY_duality:
+class circ_from_ZY_duality:
     def __init__(self,H_symp,aut):
         """
         Class for finding the physical qubit circuits of the 
@@ -208,7 +208,7 @@ class circ_from_XY_duality:
         1-qubit Clifford operators: 
         | Operators      |   Permutation   |
         |----------------|-----------------|
-        | $Xsqrt$            | (1,2)           |
+        | $S$            | (1,2)           |
 
         Args:
             H_symp (np.array): stabilizer generators of the QEC.
@@ -230,7 +230,7 @@ class circ_from_XY_duality:
         # 2-bit rep embedding
         id_mat = np.eye(n,dtype=int)
         zeros = np.zeros_like(id_mat,dtype=int)
-        self.E_mat = np.vstack((np.hstack((id_mat,id_mat)),np.hstack((zeros,id_mat))))
+        self.E_mat = np.vstack((np.hstack((zeros,id_mat)),np.hstack((id_mat,id_mat))))
         self.EInv_mat = np.array(np.mod(np.linalg.inv(self.E_mat),2),dtype=int)
 
     def swaps(self): 
@@ -262,7 +262,7 @@ class circ_from_XY_duality:
             if reduced_triplet == (1,0):
                 pass
             elif reduced_triplet == (0,1):
-                single_qubit_gates.append(("Xsqrt",gate_ind))
+                single_qubit_gates.append(("S",gate_ind))
             else:
                 raise AssertionError(f"Unknown triplet: {reduced_triplet}")
 
@@ -278,11 +278,11 @@ class circ_from_XY_duality:
         Returns:
         np.ndarray: Permutation matrix.
         """     
-        # correct qubit order for 2-bit representation (X | X+Z)
+        # correct qubit order for 2-bit representation (Z | X+Z)
         n = self.n   
-        X_bits = [i for i in range(1, 2*n + 1, 2)]
+        Z_bits = [i for i in range(1, 2*n + 1, 2)]
         XZ_bits = [i for i in range(2, 2*n + 1, 2)]
-        q3bit_order = X_bits + XZ_bits
+        q3bit_order = Z_bits + XZ_bits
         new_aut = []
         for cycle in self.aut:
             new_aut.append(tuple(q3bit_order.index(x)+1 for x in cycle))
