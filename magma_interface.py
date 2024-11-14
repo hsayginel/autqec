@@ -117,8 +117,10 @@ class qec_code_auts_from_magma:
         if save_magma_commands == True:
             with open(fileroot + f'magma_commands_n{n}k{k}d{d}.txt', "w") as file:
                 file.write(commands)
-            print(f"Run the commands on MAGMA online calculator, copy and save output as 'magma_output_n{n}k{k}d{d}.txt'...")
-            input("Press enter to continue")
+            print("Run the commands on MAGMA online calculator.")
+            print(f"Copy and save output as 'magma_output_n{n}k{k}d{d}.txt'")
+            input("Press enter to continue...")
+            print("")
             with open(fileroot + f'magma_output_n{n}k{k}d{d}.txt', "r") as file:
                 raw_magma_output = file.read()
         else: 
@@ -309,8 +311,10 @@ class qec_code_auts_from_magma_with_intersection:
         if save_magma_commands == True:
             with open(fileroot + f'magma_commands_n{n}k{k}d{d}.txt', "w") as file:
                 file.write(commands)
-            print(f"Run the commands on MAGMA online calculator, copy and save output as 'magma_output_n{n}k{k}d{d}.txt'...")
-            input("Press enter to continue")
+            print("Run the commands on MAGMA online calculator.")
+            print(f"Copy and save output as 'magma_output_n{n}k{k}d{d}.txt'")
+            input("Press enter to continue...")
+            print("")
             with open(fileroot + f'magma_output_n{n}k{k}d{d}.txt', "r") as file:
                 raw_magma_output = file.read()
         else: 
