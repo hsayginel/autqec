@@ -115,9 +115,13 @@ class qec_code_auts_from_magma:
         commands = commands_part1 + H_rref_MAGMA + commands_part2
 
         if save_magma_commands == True:
-            with open(fileroot + f'magma_commands_n{n}k{k}d{d}.txt', "w") as file:
-                file.write(commands)
-        
+            if save_magma_commands == True:
+                with open(fileroot + f'magma_commands_n{n}k{k}d{d}.txt', "w") as file:
+                    file.write(commands)
+                input("Press Enter to continue...")
+                with open(fileroot + f'magma_output_n{n}k{k}d{d}.txt', "r") as file:
+                    raw_magma_output = file.read()
+
         raw_magma_output = self.magma(commands)
 
         if save_magma_output == True:
@@ -303,8 +307,12 @@ class qec_code_auts_from_magma_with_intersection:
         commands = commands_part1 + H_rref_MAGMA + I_MAGMA + commands_part2
 
         if save_magma_commands == True:
-            with open(fileroot + f'magma_commands_n{n}k{k}d{d}.txt', "w") as file:
-                file.write(commands)
+            if save_magma_commands == True:
+                with open(fileroot + f'magma_commands_n{n}k{k}d{d}.txt', "w") as file:
+                    file.write(commands)
+                input("Press Enter to continue...")
+                with open(fileroot + f'magma_output_n{n}k{k}d{d}.txt', "r") as file:
+                    raw_magma_output = file.read()
         
         raw_magma_output = self.magma(commands)
 
