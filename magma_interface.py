@@ -115,14 +115,14 @@ class qec_code_auts_from_magma:
         commands = commands_part1 + H_rref_MAGMA + commands_part2
 
         if save_magma_commands == True:
-            if save_magma_commands == True:
-                with open(fileroot + f'magma_commands_n{n}k{k}d{d}.txt', "w") as file:
-                    file.write(commands)
-                input("Press Enter to continue...")
-                with open(fileroot + f'magma_output_n{n}k{k}d{d}.txt', "r") as file:
-                    raw_magma_output = file.read()
-
-        raw_magma_output = self.magma(commands)
+            with open(fileroot + f'magma_commands_n{n}k{k}d{d}.txt', "w") as file:
+                file.write(commands)
+            print(f"Run the commands on MAGMA online calculator, copy and save output as 'magma_output_n{n}k{k}d{d}.txt'...")
+            input("Press enter to continue")
+            with open(fileroot + f'magma_output_n{n}k{k}d{d}.txt', "r") as file:
+                raw_magma_output = file.read()
+        else: 
+            raw_magma_output = self.magma(commands) # runs MAGMA
 
         if save_magma_output == True:
             with open(fileroot + f'magma_output_n{n}k{k}d{d}.txt', "w") as file:
@@ -307,12 +307,14 @@ class qec_code_auts_from_magma_with_intersection:
         commands = commands_part1 + H_rref_MAGMA + I_MAGMA + commands_part2
 
         if save_magma_commands == True:
-            if save_magma_commands == True:
-                with open(fileroot + f'magma_commands_n{n}k{k}d{d}.txt', "w") as file:
-                    file.write(commands)
-                input("Press Enter to continue...")
-                with open(fileroot + f'magma_output_n{n}k{k}d{d}.txt', "r") as file:
-                    raw_magma_output = file.read()
+            with open(fileroot + f'magma_commands_n{n}k{k}d{d}.txt', "w") as file:
+                file.write(commands)
+            print(f"Run the commands on MAGMA online calculator, copy and save output as 'magma_output_n{n}k{k}d{d}.txt'...")
+            input("Press enter to continue")
+            with open(fileroot + f'magma_output_n{n}k{k}d{d}.txt', "r") as file:
+                raw_magma_output = file.read()
+        else: 
+            raw_magma_output = self.magma(commands) # runs MAGMA
         
         raw_magma_output = self.magma(commands)
 
