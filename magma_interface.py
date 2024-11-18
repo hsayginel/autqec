@@ -319,8 +319,6 @@ class qec_code_auts_from_magma_with_intersection:
                 raw_magma_output = file.read()
         else: 
             raw_magma_output = self.magma(commands) # runs MAGMA
-        
-        raw_magma_output = self.magma(commands)
 
         if save_magma_output == True:
             with open(fileroot + f'magma_output_n{n}k{k}d{d}.txt', "w") as file:
@@ -381,8 +379,8 @@ class qec_code_auts_from_magma_with_intersection:
             cycles = g.split(')(')
             one_aut_gen = []
             for cycle in cycles:
-                elements = cycle.strip('()').split(',')
-                elements = tuple(int(elem) for elem in elements)
+                elements = cycle.strip('()').split(',') 
+                elements = tuple(int(elem) for elem in elements if 'Id' not in elem)
                 one_aut_gen.append(elements)
             aut_gens.append(one_aut_gen)
         return aut_gens, aut_gens_text
