@@ -6,7 +6,9 @@ def symp_prod(A,B,return_omega=False):
     """
     A = np.array(A,dtype=int)
     B = np.array(B,dtype=int)
-   
+
+    if A.ndim == 1:
+        A = A.reshape(1, -1)
     if B.ndim == 1:
         B = B.reshape(1, -1)
         
