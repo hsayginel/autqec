@@ -1,5 +1,5 @@
-from ZX_dualities import *
-from automorphisms import *
+from autqec.ZX_dualities import *
+from autqec.automorphisms import *
 
 d = '_'
 n_min = 1

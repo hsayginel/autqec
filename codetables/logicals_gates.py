@@ -1,5 +1,5 @@
-from automorphisms import *
-from magma_interface import *
+from autqec.automorphisms import *
+from autqec.magma_interface import *
 
 d = '_'
 n_min = 2

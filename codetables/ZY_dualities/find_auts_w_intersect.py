@@ -1,5 +1,5 @@
-from ZY_dualities import *
-from magma_interface import *
+from autqec.ZY_dualities import *
+from autqec.magma_interface import *
 
 n_min = 1
 n_max = 50

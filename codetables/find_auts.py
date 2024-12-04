@@ -1,7 +1,7 @@
-from automorphisms import *
-from magma_interface import *
+from autqec.automorphisms import *
+from autqec.magma_interface import *
 
-n_min = 28
+n_min = 3
 n_max = 30
 k_min = 2
 k_max = n_max 
