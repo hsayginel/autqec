@@ -28,7 +28,7 @@ is_symplectic
 
 from autqec.automorphisms import circ_from_symp_mat
 import numpy as np
-from utils.symplectic import *
+from autqec.utils.symplectic import *
 
 # print(H_gate(1,1)@S_gate(1,1))
 # print(symp_mat_prods([('H',1),('S',1)],1))
