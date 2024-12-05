@@ -29,7 +29,7 @@ H. Sayginel, S. Koutsioumpas, M. Webster, A. Rajput, and D. E. Browne, Fault-Tol
 
 ```
 @misc{autqec_code,
-    author = {Sayginel, Hasan },
+    author = {Sayginel, Hasan},
     license = {GPL-3.0},
     month = aug,
     title = {{autqec (Logical Clifford Gates from Code Automorphisms)}},
