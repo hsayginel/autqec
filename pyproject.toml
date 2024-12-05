@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "autqec"
-version = "0.0.1"
+version = "0.0.2"
 description = "Tools for finding logical Clifford gates of QEC stabilizer codes from code automorphisms."
 license = "GNU General Public License v3.0, 29 June 2007"
 authors = ["Hasan Sayginel <hasan.sayginel.17@ucl.ac.uk>"]
