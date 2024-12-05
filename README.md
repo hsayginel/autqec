@@ -24,7 +24,8 @@ H. Sayginel, S. Koutsioumpas, M. Webster, A. Rajput, and D. E. Browne, Fault-Tol
     primaryClass = "quant-ph",
     month = "9",
     year = "2024"
-}```
+}
+```
 
 ```
 @misc{autqec_code,
