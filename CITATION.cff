@@ -15,5 +15,5 @@ identifiers:
     value: 'https://github.com/hsayginel/autqec'
 repository-code: 'https://github.com/hsayginel/autqec'
 license: GPL-3.0
-version: 1.0.0
+version: 0.0.1
 date-released: '2024-08-20'
