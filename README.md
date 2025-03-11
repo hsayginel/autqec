@@ -34,7 +34,7 @@ H. Sayginel, S. Koutsioumpas, M. Webster, A. Rajput, and D. E. Browne, Fault-Tol
     month = aug,
     title = {{autqec (Logical Clifford Gates from Code Automorphisms)}},
     howpublished = {\url{https://github.com/hsayginel/autqec}},
-    version = {0.0.2},
+    version = {1.0.1},
     year = {2024}
     }
 ```

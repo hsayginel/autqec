@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.0.1] - 2025-03-11
+### Fixed
+- Relaxed strict package dependencies. 
+
 ## [1.0.0] - 2025-03-06
 ### Added
 - Use of MAGMA for automorphisms now optional. Graph automorphisms can be computed with only python packages.
