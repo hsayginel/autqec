@@ -16,7 +16,9 @@ python-igraph v0.11.8: https://github.com/igraph/python-igraph.
 Note: From AutQEC v.1.0.0 MAGMA dependency is optional and Bliss can be used to find graph automorphisms which work for large codes. 
 
 ## Citation 
-H. Sayginel, S. Koutsioumpas, M. Webster, A. Rajput, and D. E. Browne, Fault-Tolerant Logical Clifford Gates from Code Automorphisms, (2024), arXiv:2409.18175 [quant-ph].
+H. Sayginel*, S. Koutsioumpas*, M. Webster*, A. Rajput, and D. E. Browne, Fault-Tolerant Logical Clifford Gates from Code Automorphisms, (2024), arXiv:2409.18175 [quant-ph].
+
+Paper Link: https://arxiv.org/abs/2409.18175. 
 
 ```
 @article{autqec_paper,
