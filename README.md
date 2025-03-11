@@ -10,6 +10,7 @@ Run: `pip install autqec`
 
 ## Dependencies (for full functionality)
 MAGMA V2.28-8: http://magma.maths.usyd.edu.au/magma/. 
+
 python-igraph v0.11.8: https://github.com/igraph/python-igraph.
 
 Note: From AutQEC v.1.0.0 MAGMA dependency is optional and Bliss can be used to find graph automorphisms which work for large codes. 
