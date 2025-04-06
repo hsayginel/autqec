@@ -2,6 +2,7 @@ import igraph as ig
 import numpy as np
 from sympy.combinatorics import Permutation, PermutationGroup
 import scipy.sparse as sparse
+from time import time
 
 def sparse_pcm_to_tanner_graph(pcm):
     """
@@ -23,7 +24,7 @@ def sparse_pcm_to_tanner_graph(pcm):
     g.add_edges(edges)
     return g
 
-def graph_aut_group(g, n, print_order=True):
+def graph_aut_group(g, n, print_order=True, print_time=False):
     """
     Calculates and returns the automorphism group of an igraph graph as a sympy PermutationGroup.
 
@@ -37,9 +38,12 @@ def graph_aut_group(g, n, print_order=True):
         A sympy PermutationGroup object representing the automorphism group of the graph,
         or Identity if no automorphism generators are found.
     """
+    ti = time()
     automorphism_generators = g.automorphism_group(color=g.vs["color"])
+    tf = time()
+    if print_time:
+        print(f'Time taken for graph auts: {tf-ti}')
     if automorphism_generators:
-
         sympy_permutations = [Permutation(list(generator)[:n]) for generator in automorphism_generators]
         sympy_group = PermutationGroup(sympy_permutations)
         if print_order:
@@ -64,7 +68,7 @@ def B_for_all_cliffords(n,bits_3=True):
             v.extend([i,n+i])
         return np.hstack([identity,identity])
     
-def valid_clifford_auts(pcm,bits_3=True,return_order=True):
+def valid_clifford_auts(pcm,bits_3=True,return_order=True,return_aut_time=False):
     m,pcm_cols = pcm.shape
     
     if bits_3:
@@ -81,7 +85,7 @@ def valid_clifford_auts(pcm,bits_3=True,return_order=True):
 
     pcm = pcm[:,v]
     tanner_graph = sparse_pcm_to_tanner_graph(pcm)
-    code_graph_auts = graph_aut_group(tanner_graph,pcm_cols,False)
+    code_graph_auts = graph_aut_group(tanner_graph,pcm_cols,False,print_time=return_aut_time)
     clifford_auts = B_graphauts.subgroup_search(code_graph_auts.__contains__)
     if return_order: 
         print(f'Order: {clifford_auts.order()}')
@@ -92,7 +96,7 @@ def valid_clifford_auts(pcm,bits_3=True,return_order=True):
    
     return cycle_indices(clifford_auts_cyclic)
 
-def valid_clifford_auts_B_rows(pcm,bits_3=True,return_order=True):
+def valid_clifford_auts_B_rows(pcm,bits_3=True,return_order=True,return_aut_time=False):
     m,pcm_cols = pcm.shape
     
     if bits_3:
@@ -106,7 +110,7 @@ def valid_clifford_auts_B_rows(pcm,bits_3=True,return_order=True):
 
     pcm = np.vstack([pcm[:,v],B_pcm])
     tanner_graph = sparse_pcm_to_tanner_graph(pcm)
-    code_graph_auts = graph_aut_group(tanner_graph,pcm_cols,False)
+    code_graph_auts = graph_aut_group(tanner_graph,pcm_cols,False,return_aut_time)
 
     if return_order: 
         print(f'Order: {code_graph_auts.order()}')
